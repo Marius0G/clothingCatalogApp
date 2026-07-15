@@ -54,6 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       '@react-native-google-signin/google-signin',
       { iosUrlScheme: GOOGLE_IOS_URL_SCHEME },
     ],
+    './plugins/withMlkitManifestFix',
   ],
   experiments: {
     typedRoutes: true,

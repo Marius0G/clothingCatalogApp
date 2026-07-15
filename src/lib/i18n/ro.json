@@ -53,6 +53,51 @@
     "stylePlaceholder": "De exemplu: îmi plac hainele oversized, nuanțe neutre — bej, alb, gri — cu accente ocazionale de culoare. Prefer outfituri smart casual…",
     "finish": "Începe"
   },
+  "addItem": {
+    "title": "Adaugă o haină",
+    "takePhoto": "Fă o poză",
+    "fromGallery": "Alege din galerie",
+    "removingBackground": "Scoatem fundalul…",
+    "cutout": "Fără fundal",
+    "original": "Original",
+    "noCutout": "Nu am putut scoate fundalul — păstrăm poza originală.",
+    "itemTitle": "Denumire",
+    "itemTitlePlaceholder": "de ex. Tricou alb oversized",
+    "retake": "Altă poză"
+  },
+  "item": {
+    "brand": "Brand",
+    "category": "Categorie",
+    "categories": {
+      "top": "Sus",
+      "bottom": "Jos",
+      "dress": "Rochie",
+      "outerwear": "Geacă / palton",
+      "shoes": "Încălțăminte",
+      "accessory": "Accesoriu"
+    },
+    "subcategory": "Tip",
+    "subcategoryPlaceholder": "tricou, jeanși, sneakers…",
+    "colors": "Culori",
+    "colorsPlaceholder": "alb, bej (separate prin virgulă)",
+    "styleTags": "Stil",
+    "styleTagsPlaceholder": "casual, streetwear (separate prin virgulă)",
+    "notes": "Notițe",
+    "aiTagged": "✦ Etichetat automat de AI — corectează ce nu se potrivește",
+    "delete": "Șterge haina",
+    "deleteTitle": "Ștergi haina?",
+    "deleteBody": "Se șterge și din toate colecțiile.",
+    "deleteConfirm": "Șterge"
+  },
+  "collections": {
+    "title": "Colecții",
+    "newLabel": "Colecție nouă",
+    "newPlaceholder": "de ex. Summer clothes",
+    "create": "Creează colecția",
+    "deleteTitle": "Ștergi colecția „{{name}}\"?",
+    "emptyTitle": "Colecția e goală",
+    "emptyBody": "Deschide o haină și bifeaz-o în această colecție."
+  },
   "tabs": {
     "wardrobe": "Garderobă",
     "wishlist": "Wishlist",

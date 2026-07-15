@@ -53,6 +53,51 @@
     "stylePlaceholder": "For example: I like oversized clothes, neutral shades — beige, white, grey — with occasional pops of colour. I prefer smart casual outfits…",
     "finish": "Get started"
   },
+  "addItem": {
+    "title": "Add a piece",
+    "takePhoto": "Take a photo",
+    "fromGallery": "Pick from gallery",
+    "removingBackground": "Removing background…",
+    "cutout": "No background",
+    "original": "Original",
+    "noCutout": "Couldn't remove the background — keeping the original photo.",
+    "itemTitle": "Name",
+    "itemTitlePlaceholder": "e.g. White oversized tee",
+    "retake": "Different photo"
+  },
+  "item": {
+    "brand": "Brand",
+    "category": "Category",
+    "categories": {
+      "top": "Top",
+      "bottom": "Bottom",
+      "dress": "Dress",
+      "outerwear": "Outerwear",
+      "shoes": "Shoes",
+      "accessory": "Accessory"
+    },
+    "subcategory": "Type",
+    "subcategoryPlaceholder": "t-shirt, jeans, sneakers…",
+    "colors": "Colours",
+    "colorsPlaceholder": "white, beige (comma separated)",
+    "styleTags": "Style",
+    "styleTagsPlaceholder": "casual, streetwear (comma separated)",
+    "notes": "Notes",
+    "aiTagged": "✦ Auto-tagged by AI — fix anything that looks off",
+    "delete": "Delete piece",
+    "deleteTitle": "Delete this piece?",
+    "deleteBody": "It will be removed from all collections too.",
+    "deleteConfirm": "Delete"
+  },
+  "collections": {
+    "title": "Collections",
+    "newLabel": "New collection",
+    "newPlaceholder": "e.g. Summer clothes",
+    "create": "Create collection",
+    "deleteTitle": "Delete collection \"{{name}}\"?",
+    "emptyTitle": "This collection is empty",
+    "emptyBody": "Open a piece and tick it into this collection."
+  },
   "tabs": {
     "wardrobe": "Wardrobe",
     "wishlist": "Wishlist",

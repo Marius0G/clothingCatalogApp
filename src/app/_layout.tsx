@@ -49,6 +49,10 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!!session && !needsOnboarding}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="item/[id]" />
+        <Stack.Screen name="collections/index" />
+        <Stack.Screen name="collections/[id]" />
       </Stack.Protected>
     </Stack>
   );
