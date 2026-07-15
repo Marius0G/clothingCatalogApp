@@ -1,5 +1,6 @@
 // Vision auto-tagging: looks at an item photo and fills category, subcategory,
 // colors and style tags. Tags are suggestions — the user can edit them in-app.
+import { encodeBase64 } from 'jsr:@std/encoding/base64';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { handleOptions, jsonResponse } from '../_shared/cors.ts';
@@ -57,10 +58,14 @@ Deno.serve(async (req) => {
     .eq('id', userId)
     .single();
 
-  const { data: signed, error: signError } = await admin.storage
+  // Base64 data URL: works from any deployment (local signed URLs would be
+  // unreachable from the AI provider) and never leaks a storage URL.
+  const { data: blob, error: downloadError } = await admin.storage
     .from('item-photos')
-    .createSignedUrl(item.image_path, 120);
-  if (signError || !signed) return jsonResponse({ error: 'could not read image' }, 500);
+    .download(item.image_path);
+  if (downloadError || !blob) return jsonResponse({ error: 'could not read image' }, 500);
+  const mime = item.image_path.endsWith('.png') ? 'image/png' : 'image/jpeg';
+  const imageDataUrl = `data:${mime};base64,${encodeBase64(await blob.arrayBuffer())}`;
 
   try {
     let totalPrompt = 0;
@@ -81,7 +86,7 @@ Deno.serve(async (req) => {
                   : prompt(profile?.locale ?? 'ro') +
                     '\nYour previous reply was not valid JSON matching the schema. Return ONLY the JSON object.',
             },
-            { type: 'image_url', image_url: { url: signed.signedUrl } },
+            { type: 'image_url', image_url: { url: imageDataUrl } },
           ],
         },
       ]);

@@ -2,15 +2,11 @@
 
 Ce trebuie făcut de mână (o singură dată) ca aplicația să meargă cap-coadă. Ordinea contează.
 
-## 1. Supabase (obligatoriu — aplicația nu pornește fără)
+## 1. Supabase — ✅ GATA (16 iul 2026)
 
-1. Cont pe [supabase.com](https://supabase.com) → **New project** (regiunea `eu-central-1`, Frankfurt — aproape de România).
-2. Din **Project Settings → API** copiază `URL` și `anon public key` în `.env` (copiază întâi `.env.example` → `.env`).
-3. Local: `npx supabase login`, apoi `npx supabase link --project-ref <ref-ul-proiectului>`.
-4. Aplică schema: `npx supabase db push` (rulează `supabase/migrations/0001_init.sql`).
-5. Deploy funcția de ștergere cont: `npx supabase functions deploy delete-account`.
+Proiectul cloud există: **clothing-catalog** (`kzoscldpakbhtpulujdw`, Frankfurt) — [dashboard](https://supabase.com/dashboard/project/kzoscldpakbhtpulujdw). Schema e aplicată, `delete-account` și `tag-item` sunt deploy-ate, cheia Featherless e setată ca secret. Valorile pentru `.env` (varianta cloud) sunt deja în `.env`, comentate.
 
-Pentru dezvoltare locală completă (opțional dar recomandat): instalează **Docker Desktop** (backend WSL2), apoi `npx supabase start` îți dă Postgres + Auth + Storage local.
+Dezvoltarea de zi cu zi merge pe stack-ul local: `npx supabase start` (cere Docker Desktop pornit) + `.env`-ul activ pointează la `10.0.2.2:54321`. După fiecare migrare nouă: `npx supabase db push` o aplică și în cloud.
 
 ## 2. Conturi de developer (obligatoriu pentru build-uri pe telefon)
 
@@ -39,10 +35,9 @@ Apoi local: `npx expo start` și deschizi aplicația din dev client.
 1. În Apple Developer: activează capability-ul **Sign in with Apple** pe App ID (EAS o face automat la primul build iOS, verifică doar).
 2. În Supabase: **Authentication → Providers → Apple** → activează, cu Service ID + key generate din Apple Developer (urmează ghidul Supabase pentru „Sign in with Apple on native").
 
-## 5. Featherless AI (necesar din M1 — auto-tagging)
+## 5. Featherless AI — ✅ GATA (16 iul 2026)
 
-- Cheia API din contul Featherless → o setezi ca secret pe funcții: `npx supabase secrets set FEATHERLESS_API_KEY=...`
-- Nu o pune NICIODATĂ în `.env` al aplicației (ar ajunge în bundle).
+Cheia e setată ca secret pe funcțiile cloud și local în `supabase/functions/.env` (gitignored). Model vision: `Qwen/Qwen2.5-VL-72B-Instruct` (7B e frecvent la capacitate). Nu pune cheia NICIODATĂ în `.env`-ul aplicației (ar ajunge în bundle).
 
 ## 6. Afiliere (necesar din M6 — pornit din M4, aprobarea durează săptămâni)
 
