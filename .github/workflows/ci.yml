@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx expo lint --max-warnings 0
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check edge functions
+        run: deno check supabase/functions/**/index.ts
+      - name: Test edge functions
+        run: |
+          if ls supabase/functions/**/*.test.ts >/dev/null 2>&1; then
+            deno test --allow-all supabase/functions
+          else
+            echo "no tests yet"
+          fi

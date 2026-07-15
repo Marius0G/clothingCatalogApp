@@ -1,0 +1,86 @@
+{
+  "common": {
+    "appName": "Clothing Catalog",
+    "tagline": "Toate hainele tale preferate, într-o singură aplicație",
+    "continue": "Continuă",
+    "skip": "Sari peste",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "back": "Înapoi",
+    "done": "Gata",
+    "or": "sau",
+    "error": "Ceva n-a mers. Încearcă din nou.",
+    "loading": "Se încarcă…",
+    "comingSoon": "În curând"
+  },
+  "auth": {
+    "signIn": "Intră în cont",
+    "signUp": "Creează cont",
+    "email": "Email",
+    "emailPlaceholder": "adresa@email.com",
+    "password": "Parolă",
+    "passwordPlaceholder": "minim 8 caractere",
+    "signInWithGoogle": "Continuă cu Google",
+    "signInWithApple": "Continuă cu Apple",
+    "noAccount": "Nu ai cont?",
+    "haveAccount": "Ai deja cont?",
+    "signOut": "Ieși din cont",
+    "checkEmail": "Ți-am trimis un email de confirmare. Deschide linkul din el, apoi intră în cont.",
+    "errors": {
+      "invalidCredentials": "Email sau parolă greșită.",
+      "emailInUse": "Există deja un cont cu acest email.",
+      "weakPassword": "Parola e prea scurtă — folosește minim 8 caractere.",
+      "emailNotConfirmed": "Confirmă-ți întâi emailul — verifică inbox-ul.",
+      "generic": "Nu am putut finaliza. Verifică datele și încearcă din nou."
+    }
+  },
+  "onboarding": {
+    "profileTitle": "Spune-ne câte ceva despre tine",
+    "profileSubtitle": "Totul e opțional — poți sări peste orice.",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Cum să-ți spunem?",
+    "age": "Vârstă",
+    "sex": "Sex",
+    "sexMale": "Masculin",
+    "sexFemale": "Feminin",
+    "sexOther": "Altul",
+    "sizesTitle": "Mărimile tale",
+    "sizeTop": "Sus (tricouri, cămăși)",
+    "sizeBottom": "Jos (pantaloni, fuste)",
+    "sizeShoe": "Încălțăminte",
+    "styleTitle": "Ce stil îți place?",
+    "styleSubtitle": "Scrie liber: ce haine preferi, ce nuanțe, ce fel de outfituri, ce contrast. Pe baza acestui text se fac recomandările.",
+    "stylePlaceholder": "De exemplu: îmi plac hainele oversized, nuanțe neutre — bej, alb, gri — cu accente ocazionale de culoare. Prefer outfituri smart casual…",
+    "finish": "Începe"
+  },
+  "tabs": {
+    "wardrobe": "Garderobă",
+    "wishlist": "Wishlist",
+    "discover": "Descoperă",
+    "profile": "Profil"
+  },
+  "wardrobe": {
+    "emptyTitle": "Garderoba ta e goală",
+    "emptyBody": "Adaugă prima haină cu o poză — apare aici, frumos, ca pe un site."
+  },
+  "wishlist": {
+    "emptyTitle": "Nimic în wishlist încă",
+    "emptyBody": "Lipește un link dintr-un magazin și salvăm noi poza, prețul și mărimile."
+  },
+  "discover": {
+    "emptyTitle": "Recomandările vin aici",
+    "emptyBody": "Adaugă câteva haine în garderobă și îți propunem outfituri."
+  },
+  "profile": {
+    "settings": "Setări",
+    "language": "Limbă",
+    "languageRo": "Română",
+    "languageEn": "Engleză",
+    "editStylePrefs": "Preferințele mele de stil",
+    "deleteAccount": "Șterge contul",
+    "deleteAccountTitle": "Ștergi contul definitiv?",
+    "deleteAccountBody": "Toate hainele, colecțiile și datele tale se șterg permanent. Acțiunea nu poate fi anulată.",
+    "deleteAccountConfirm": "Da, șterge tot",
+    "signOut": "Ieși din cont"
+  }
+}

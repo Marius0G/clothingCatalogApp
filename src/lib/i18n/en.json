@@ -1,0 +1,86 @@
+{
+  "common": {
+    "appName": "Clothing Catalog",
+    "tagline": "All your favourite clothes in one app",
+    "continue": "Continue",
+    "skip": "Skip",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "done": "Done",
+    "or": "or",
+    "error": "Something went wrong. Please try again.",
+    "loading": "Loading…",
+    "comingSoon": "Coming soon"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "email": "Email",
+    "emailPlaceholder": "you@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "at least 8 characters",
+    "signInWithGoogle": "Continue with Google",
+    "signInWithApple": "Continue with Apple",
+    "noAccount": "No account yet?",
+    "haveAccount": "Already have an account?",
+    "signOut": "Sign out",
+    "checkEmail": "We sent you a confirmation email. Open the link inside, then sign in.",
+    "errors": {
+      "invalidCredentials": "Wrong email or password.",
+      "emailInUse": "An account with this email already exists.",
+      "weakPassword": "Password is too short — use at least 8 characters.",
+      "emailNotConfirmed": "Please confirm your email first — check your inbox.",
+      "generic": "Couldn't complete that. Check your details and try again."
+    }
+  },
+  "onboarding": {
+    "profileTitle": "Tell us a bit about yourself",
+    "profileSubtitle": "Everything is optional — skip anything you like.",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "What should we call you?",
+    "age": "Age",
+    "sex": "Sex",
+    "sexMale": "Male",
+    "sexFemale": "Female",
+    "sexOther": "Other",
+    "sizesTitle": "Your sizes",
+    "sizeTop": "Top (t-shirts, shirts)",
+    "sizeBottom": "Bottom (trousers, skirts)",
+    "sizeShoe": "Shoes",
+    "styleTitle": "What's your style?",
+    "styleSubtitle": "Write freely: what clothes you prefer, which shades, what kind of outfits, what contrast. Recommendations are based on this.",
+    "stylePlaceholder": "For example: I like oversized clothes, neutral shades — beige, white, grey — with occasional pops of colour. I prefer smart casual outfits…",
+    "finish": "Get started"
+  },
+  "tabs": {
+    "wardrobe": "Wardrobe",
+    "wishlist": "Wishlist",
+    "discover": "Discover",
+    "profile": "Profile"
+  },
+  "wardrobe": {
+    "emptyTitle": "Your wardrobe is empty",
+    "emptyBody": "Add your first piece with a photo — it shows up here looking like it's from a store."
+  },
+  "wishlist": {
+    "emptyTitle": "Nothing in your wishlist yet",
+    "emptyBody": "Paste a link from a store and we'll save the photo, price and sizes."
+  },
+  "discover": {
+    "emptyTitle": "Recommendations live here",
+    "emptyBody": "Add a few clothes to your wardrobe and we'll suggest outfits."
+  },
+  "profile": {
+    "settings": "Settings",
+    "language": "Language",
+    "languageRo": "Romanian",
+    "languageEn": "English",
+    "editStylePrefs": "My style preferences",
+    "deleteAccount": "Delete account",
+    "deleteAccountTitle": "Delete your account permanently?",
+    "deleteAccountBody": "All your clothes, collections and data will be permanently deleted. This cannot be undone.",
+    "deleteAccountConfirm": "Yes, delete everything",
+    "signOut": "Sign out"
+  }
+}
