@@ -22,7 +22,7 @@ Sursa canonică: **`design/Clothing-App.dc.html`** („Editorial minimal") — o
 
 - **Tokens**: `tailwind.config.js` + `src/lib/theme.ts` (culori: paper/card/bright/ink/dark/accent/sale…; fonturi: Playfair Display pentru titluri serif, Instrument Sans pentru rest). Nu hardcoda culori/hex în componente.
 - **Iconuri**: doar `src/components/icons.tsx` (SVG-urile exacte din design, stroke subțire) — nu Ionicons/alte seturi.
-- **Structură**: tab bar 5 sloturi (Acasă/Favorite/[+]/Garderobă/Setări) cu buton central ridicat (`src/components/tab-bar.tsx`); Descoperă e ecran de stack, nu tab.
+- **Structură**: tab bar = **varianta 2c-B din design (pastilă neagră plutitoare, doar iconuri, + alb central)** — `src/components/tab-bar.tsx`; tab-urile: Acasă/Favorite/[+]/Garderobă/Setări; Descoperă e ecran de stack, nu tab.
 - **Litere**: titluri de ecran = `font-serif` 29-30px; secțiuni = `font-serif` 20-22px; butoane primare = fundal `dark`, radius 14, înălțime 54.
 
 ## Convenții
