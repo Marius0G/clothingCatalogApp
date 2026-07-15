@@ -1,7 +1,17 @@
 import '../global.css';
 import '@/lib/i18n';
 
+import {
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+} from '@expo-google-fonts/instrument-sans';
+import {
+  PlayfairDisplay_500Medium,
+  PlayfairDisplay_600SemiBold,
+} from '@expo-google-fonts/playfair-display';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -17,9 +27,16 @@ function RootNavigator() {
   const { session, initializing } = useAuth();
   const { data: profile, isPending: profilePending } = useProfile();
   const { i18n } = useTranslation();
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_500Medium,
+    PlayfairDisplay_600SemiBold,
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+  });
 
   // Signed in → wait for the profile before choosing onboarding vs tabs.
-  const ready = !initializing && (!session || !profilePending);
+  const ready = fontsLoaded && !initializing && (!session || !profilePending);
 
   useEffect(() => {
     if (ready) {
@@ -51,6 +68,7 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
         <Stack.Screen name="item/[id]" />
+        <Stack.Screen name="discover" />
         <Stack.Screen name="collections/index" />
         <Stack.Screen name="collections/[id]" />
       </Stack.Protected>

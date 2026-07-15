@@ -16,7 +16,7 @@ export function Screen({ children, scroll = true }: Props) {
 
   if (!scroll) {
     return (
-      <View className="flex-1 bg-paper-warm px-6" style={padding}>
+      <View className="flex-1 bg-paper px-6" style={padding}>
         {children}
       </View>
     );
@@ -24,7 +24,7 @@ export function Screen({ children, scroll = true }: Props) {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-paper-warm"
+      className="flex-1 bg-paper"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView

@@ -1,7 +1,6 @@
 {
   "common": {
     "appName": "Clothing Catalog",
-    "tagline": "All your favourite clothes in one app",
     "continue": "Continue",
     "skip": "Skip",
     "save": "Save",
@@ -11,21 +10,35 @@
     "or": "or",
     "error": "Something went wrong. Please try again.",
     "loading": "Loading…",
-    "comingSoon": "Coming soon"
+    "viewAll": "View all",
+    "optional": "(optional)"
+  },
+  "tabs": {
+    "home": "Home",
+    "wishlist": "Wishlist",
+    "wardrobe": "Wardrobe",
+    "settings": "Settings"
   },
   "auth": {
-    "signIn": "Sign in",
-    "signUp": "Create account",
+    "title": "Build your\nbest wardrobe.",
+    "subtitle": "Save, organise and get inspired.",
     "email": "Email",
-    "emailPlaceholder": "you@email.com",
+    "emailPlaceholder": "you@example.com",
     "password": "Password",
     "passwordPlaceholder": "at least 8 characters",
-    "signInWithGoogle": "Continue with Google",
-    "signInWithApple": "Continue with Apple",
-    "noAccount": "No account yet?",
+    "apple": "Continue with Apple",
+    "google": "Continue with Google",
+    "contEmail": "Continue with Email",
+    "signIn": "Log in",
+    "signUp": "Create account",
     "haveAccount": "Already have an account?",
+    "noAccount": "No account yet?",
+    "agreePre": "I agree to the",
+    "tos": "Terms of Service",
+    "andW": "and",
+    "privacy": "Privacy Policy.",
+    "checkEmail": "We sent you a confirmation email. Open the link inside, then log in.",
     "signOut": "Sign out",
-    "checkEmail": "We sent you a confirmation email. Open the link inside, then sign in.",
     "errors": {
       "invalidCredentials": "Wrong email or password.",
       "emailInUse": "An account with this email already exists.",
@@ -44,46 +57,108 @@
     "sexMale": "Male",
     "sexFemale": "Female",
     "sexOther": "Other",
-    "sizesTitle": "Your sizes",
-    "sizeTop": "Top (t-shirts, shirts)",
-    "sizeBottom": "Bottom (trousers, skirts)",
-    "sizeShoe": "Shoes",
-    "styleTitle": "What's your style?",
-    "styleSubtitle": "Write freely: what clothes you prefer, which shades, what kind of outfits, what contrast. Recommendations are based on this.",
-    "stylePlaceholder": "For example: I like oversized clothes, neutral shades — beige, white, grey — with occasional pops of colour. I prefer smart casual outfits…",
-    "finish": "Get started"
+    "prefTitle": "Tell us your style",
+    "prefSub": "This helps us personalise your recommendations.",
+    "stylePrefs": "Style preferences",
+    "styles": {
+      "minimal": "Minimal",
+      "smartcasual": "Smart Casual",
+      "oldmoney": "Old Money",
+      "streetwear": "Streetwear",
+      "business": "Business",
+      "quietlux": "Quiet Luxury"
+    },
+    "prefColors": "Preferred colors",
+    "favBrands": "Favorite brands",
+    "sizes": "Clothing sizes",
+    "szTops": "Tops",
+    "szBottoms": "Bottoms",
+    "szShoes": "Shoes",
+    "anything": "Anything else we should know?",
+    "anythingPh": "e.g. I prefer relaxed fits and natural fabrics.",
+    "savePrefs": "Save preferences"
+  },
+  "home": {
+    "greetingMorning": "Good morning{{name}}.",
+    "greetingDay": "Hello{{name}}.",
+    "greetingEvening": "Good evening{{name}}.",
+    "greetingSub": "Build your best wardrobe.",
+    "statWishlist": "Wishlist",
+    "statWardrobe": "Wardrobe",
+    "statOutfits": "Outfits",
+    "statAiLooks": "AI Looks",
+    "outfitInsp": "Outfit inspiration",
+    "fromWardrobe": "From your wardrobe",
+    "seeOutfit": "See outfit",
+    "priceDrops": "Price drops",
+    "emptyDiscTitle": "Add a few pieces first",
+    "emptyDiscSub": "Once your wardrobe has items, we start building outfits for you."
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "pastePh": "Paste a product link to save",
+    "fetchNote": "We'll fetch details and alerts for you.",
+    "priceAlert": "Price alert",
+    "restockAlert": "Restock alert",
+    "comingSoon": "Link import is coming soon — until then you can move pieces from your wardrobe.",
+    "emptyTitle": "Nothing saved yet",
+    "emptySub": "Paste a link from any store to track price drops and restocks.",
+    "emptyCta": "Paste a link"
+  },
+  "wardrobe": {
+    "title": "Wardrobe",
+    "searchPh": "Search your wardrobe",
+    "items": "{{count}} items",
+    "fAll": "All",
+    "emptyTitle": "Your wardrobe is empty",
+    "emptySub": "Snap a photo of any piece — we'll cut out the background and tag it for you.",
+    "emptyCta": "Add your first item"
+  },
+  "discover": {
+    "title": "Discover",
+    "forYou": "Outfits for you",
+    "regenerate": "Regenerate",
+    "whyThis": "Why this works",
+    "completes": "Completes your wardrobe",
+    "completesSub": "Real pieces that match what you have",
+    "shop": "Shop",
+    "emptyTitle": "Add a few pieces first",
+    "emptySub": "Once your wardrobe has items, we start building outfits for you."
   },
   "addItem": {
-    "title": "Add a piece",
+    "title": "Add an item",
     "takePhoto": "Take a photo",
     "fromGallery": "Pick from gallery",
     "removingBackground": "Removing background…",
-    "cutout": "No background",
-    "original": "Original",
-    "noCutout": "Couldn't remove the background — keeping the original photo.",
+    "bgRemoved": "Background removed",
+    "keepOrig": "Keep original",
+    "retake": "Retake",
+    "aiTagged": "AI-suggested tags · editable",
     "itemTitle": "Name",
     "itemTitlePlaceholder": "e.g. White oversized tee",
-    "retake": "Different photo"
+    "category": "Category",
+    "addCollection": "Add to collection",
+    "saveItem": "Save to wardrobe"
   },
   "item": {
     "brand": "Brand",
     "category": "Category",
     "categories": {
-      "top": "Top",
-      "bottom": "Bottom",
-      "dress": "Dress",
-      "outerwear": "Outerwear",
+      "top": "Tops",
+      "bottom": "Bottoms",
+      "dress": "Dresses",
+      "outerwear": "Jackets",
       "shoes": "Shoes",
-      "accessory": "Accessory"
+      "accessory": "Accessories"
     },
     "subcategory": "Type",
     "subcategoryPlaceholder": "t-shirt, jeans, sneakers…",
-    "colors": "Colours",
+    "colors": "Colour",
     "colorsPlaceholder": "white, beige (comma separated)",
     "styleTags": "Style",
     "styleTagsPlaceholder": "casual, streetwear (comma separated)",
     "notes": "Notes",
-    "aiTagged": "✦ Auto-tagged by AI — fix anything that looks off",
+    "aiTagged": "AI-suggested tags · editable",
     "delete": "Delete piece",
     "deleteTitle": "Delete this piece?",
     "deleteBody": "It will be removed from all collections too.",
@@ -98,34 +173,15 @@
     "emptyTitle": "This collection is empty",
     "emptyBody": "Open a piece and tick it into this collection."
   },
-  "tabs": {
-    "wardrobe": "Wardrobe",
-    "wishlist": "Wishlist",
-    "discover": "Discover",
-    "profile": "Profile"
-  },
-  "wardrobe": {
-    "emptyTitle": "Your wardrobe is empty",
-    "emptyBody": "Add your first piece with a photo — it shows up here looking like it's from a store."
-  },
-  "wishlist": {
-    "emptyTitle": "Nothing in your wishlist yet",
-    "emptyBody": "Paste a link from a store and we'll save the photo, price and sizes."
-  },
-  "discover": {
-    "emptyTitle": "Recommendations live here",
-    "emptyBody": "Add a few clothes to your wardrobe and we'll suggest outfits."
-  },
-  "profile": {
-    "settings": "Settings",
+  "settings": {
+    "title": "Settings",
     "language": "Language",
-    "languageRo": "Romanian",
-    "languageEn": "English",
-    "editStylePrefs": "My style preferences",
+    "languageRo": "RO",
+    "languageEn": "EN",
+    "collections": "My collections",
     "deleteAccount": "Delete account",
     "deleteAccountTitle": "Delete your account permanently?",
-    "deleteAccountBody": "All your clothes, collections and data will be permanently deleted. This cannot be undone.",
-    "deleteAccountConfirm": "Yes, delete everything",
-    "signOut": "Sign out"
+    "deleteAccountBody": "All your pieces, collections and data will be permanently deleted. This cannot be undone.",
+    "deleteAccountConfirm": "Yes, delete everything"
   }
 }

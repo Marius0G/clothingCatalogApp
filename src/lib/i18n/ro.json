@@ -1,7 +1,6 @@
 {
   "common": {
     "appName": "Clothing Catalog",
-    "tagline": "Toate hainele tale preferate, într-o singură aplicație",
     "continue": "Continuă",
     "skip": "Sari peste",
     "save": "Salvează",
@@ -11,21 +10,35 @@
     "or": "sau",
     "error": "Ceva n-a mers. Încearcă din nou.",
     "loading": "Se încarcă…",
-    "comingSoon": "În curând"
+    "viewAll": "Vezi tot",
+    "optional": "(opțional)"
+  },
+  "tabs": {
+    "home": "Acasă",
+    "wishlist": "Favorite",
+    "wardrobe": "Garderobă",
+    "settings": "Setări"
   },
   "auth": {
-    "signIn": "Intră în cont",
-    "signUp": "Creează cont",
+    "title": "Creează-ți\ngarderoba ideală.",
+    "subtitle": "Salvează, organizează și inspiră-te.",
     "email": "Email",
-    "emailPlaceholder": "adresa@email.com",
+    "emailPlaceholder": "tu@exemplu.com",
     "password": "Parolă",
     "passwordPlaceholder": "minim 8 caractere",
-    "signInWithGoogle": "Continuă cu Google",
-    "signInWithApple": "Continuă cu Apple",
-    "noAccount": "Nu ai cont?",
+    "apple": "Continuă cu Apple",
+    "google": "Continuă cu Google",
+    "contEmail": "Continuă cu email",
+    "signIn": "Autentifică-te",
+    "signUp": "Creează cont",
     "haveAccount": "Ai deja cont?",
+    "noAccount": "Nu ai cont?",
+    "agreePre": "Sunt de acord cu",
+    "tos": "Termenii de utilizare",
+    "andW": "și",
+    "privacy": "Politica de confidențialitate.",
+    "checkEmail": "Ți-am trimis un email de confirmare. Deschide linkul din el, apoi autentifică-te.",
     "signOut": "Ieși din cont",
-    "checkEmail": "Ți-am trimis un email de confirmare. Deschide linkul din el, apoi intră în cont.",
     "errors": {
       "invalidCredentials": "Email sau parolă greșită.",
       "emailInUse": "Există deja un cont cu acest email.",
@@ -44,26 +57,88 @@
     "sexMale": "Masculin",
     "sexFemale": "Feminin",
     "sexOther": "Altul",
-    "sizesTitle": "Mărimile tale",
-    "sizeTop": "Sus (tricouri, cămăși)",
-    "sizeBottom": "Jos (pantaloni, fuste)",
-    "sizeShoe": "Încălțăminte",
-    "styleTitle": "Ce stil îți place?",
-    "styleSubtitle": "Scrie liber: ce haine preferi, ce nuanțe, ce fel de outfituri, ce contrast. Pe baza acestui text se fac recomandările.",
-    "stylePlaceholder": "De exemplu: îmi plac hainele oversized, nuanțe neutre — bej, alb, gri — cu accente ocazionale de culoare. Prefer outfituri smart casual…",
-    "finish": "Începe"
+    "prefTitle": "Spune-ne stilul tău",
+    "prefSub": "Ne ajută să-ți personalizăm recomandările.",
+    "stylePrefs": "Preferințe de stil",
+    "styles": {
+      "minimal": "Minimal",
+      "smartcasual": "Smart Casual",
+      "oldmoney": "Old Money",
+      "streetwear": "Streetwear",
+      "business": "Business",
+      "quietlux": "Lux discret"
+    },
+    "prefColors": "Culori preferate",
+    "favBrands": "Branduri preferate",
+    "sizes": "Mărimi",
+    "szTops": "Sus",
+    "szBottoms": "Jos",
+    "szShoes": "Încălț.",
+    "anything": "Altceva ce ar trebui să știm?",
+    "anythingPh": "ex. prefer croieli lejere și materiale naturale.",
+    "savePrefs": "Salvează preferințele"
+  },
+  "home": {
+    "greetingMorning": "Bună dimineața{{name}}.",
+    "greetingDay": "Salut{{name}}.",
+    "greetingEvening": "Bună seara{{name}}.",
+    "greetingSub": "Creează-ți garderoba ideală.",
+    "statWishlist": "Favorite",
+    "statWardrobe": "Garderobă",
+    "statOutfits": "Ținute",
+    "statAiLooks": "Look-uri AI",
+    "outfitInsp": "Inspirație ținute",
+    "fromWardrobe": "Din garderoba ta",
+    "seeOutfit": "Vezi ținuta",
+    "priceDrops": "Reduceri",
+    "emptyDiscTitle": "Adaugă întâi câteva piese",
+    "emptyDiscSub": "Când garderoba are articole, începem să-ți construim ținute."
+  },
+  "wishlist": {
+    "title": "Favorite",
+    "pastePh": "Lipește un link de produs",
+    "fetchNote": "Preluăm detaliile și alertele pentru tine.",
+    "priceAlert": "Alertă preț",
+    "restockAlert": "Alertă stoc",
+    "comingSoon": "Importul din link vine în curând — până atunci poți muta piese din garderobă.",
+    "emptyTitle": "Nimic salvat încă",
+    "emptySub": "Lipește un link din orice magazin pentru reduceri și rea-stocare.",
+    "emptyCta": "Lipește un link"
+  },
+  "wardrobe": {
+    "title": "Garderobă",
+    "searchPh": "Caută în garderobă",
+    "items": "{{count}} articole",
+    "fAll": "Toate",
+    "emptyTitle": "Garderoba ta e goală",
+    "emptySub": "Fotografiază orice piesă — îi eliminăm fundalul și o etichetăm pentru tine.",
+    "emptyCta": "Adaugă prima piesă"
+  },
+  "discover": {
+    "title": "Descoperă",
+    "forYou": "Ținute pentru tine",
+    "regenerate": "Regenerează",
+    "whyThis": "De ce funcționează",
+    "completes": "Îți completează garderoba",
+    "completesSub": "Piese reale care se potrivesc cu ce ai",
+    "shop": "Cumpără",
+    "emptyTitle": "Adaugă întâi câteva piese",
+    "emptySub": "Când garderoba are articole, începem să-ți construim ținute."
   },
   "addItem": {
-    "title": "Adaugă o haină",
+    "title": "Adaugă o piesă",
     "takePhoto": "Fă o poză",
     "fromGallery": "Alege din galerie",
-    "removingBackground": "Scoatem fundalul…",
-    "cutout": "Fără fundal",
-    "original": "Original",
-    "noCutout": "Nu am putut scoate fundalul — păstrăm poza originală.",
+    "removingBackground": "Eliminăm fundalul…",
+    "bgRemoved": "Fundal eliminat",
+    "keepOrig": "Păstrează originalul",
+    "retake": "Refă poza",
+    "aiTagged": "Etichete sugerate de AI · editabile",
     "itemTitle": "Denumire",
-    "itemTitlePlaceholder": "de ex. Tricou alb oversized",
-    "retake": "Altă poză"
+    "itemTitlePlaceholder": "ex. Tricou alb oversized",
+    "category": "Categorie",
+    "addCollection": "Adaugă în colecție",
+    "saveItem": "Salvează în garderobă"
   },
   "item": {
     "brand": "Brand",
@@ -72,60 +147,41 @@
       "top": "Sus",
       "bottom": "Jos",
       "dress": "Rochie",
-      "outerwear": "Geacă / palton",
+      "outerwear": "Jachete",
       "shoes": "Încălțăminte",
-      "accessory": "Accesoriu"
+      "accessory": "Accesorii"
     },
     "subcategory": "Tip",
     "subcategoryPlaceholder": "tricou, jeanși, sneakers…",
-    "colors": "Culori",
+    "colors": "Culoare",
     "colorsPlaceholder": "alb, bej (separate prin virgulă)",
     "styleTags": "Stil",
     "styleTagsPlaceholder": "casual, streetwear (separate prin virgulă)",
     "notes": "Notițe",
-    "aiTagged": "✦ Etichetat automat de AI — corectează ce nu se potrivește",
-    "delete": "Șterge haina",
-    "deleteTitle": "Ștergi haina?",
+    "aiTagged": "Etichete sugerate de AI · editabile",
+    "delete": "Șterge piesa",
+    "deleteTitle": "Ștergi piesa?",
     "deleteBody": "Se șterge și din toate colecțiile.",
     "deleteConfirm": "Șterge"
   },
   "collections": {
     "title": "Colecții",
     "newLabel": "Colecție nouă",
-    "newPlaceholder": "de ex. Summer clothes",
+    "newPlaceholder": "ex. Summer clothes",
     "create": "Creează colecția",
     "deleteTitle": "Ștergi colecția „{{name}}\"?",
     "emptyTitle": "Colecția e goală",
-    "emptyBody": "Deschide o haină și bifeaz-o în această colecție."
+    "emptyBody": "Deschide o piesă și bifeaz-o în această colecție."
   },
-  "tabs": {
-    "wardrobe": "Garderobă",
-    "wishlist": "Wishlist",
-    "discover": "Descoperă",
-    "profile": "Profil"
-  },
-  "wardrobe": {
-    "emptyTitle": "Garderoba ta e goală",
-    "emptyBody": "Adaugă prima haină cu o poză — apare aici, frumos, ca pe un site."
-  },
-  "wishlist": {
-    "emptyTitle": "Nimic în wishlist încă",
-    "emptyBody": "Lipește un link dintr-un magazin și salvăm noi poza, prețul și mărimile."
-  },
-  "discover": {
-    "emptyTitle": "Recomandările vin aici",
-    "emptyBody": "Adaugă câteva haine în garderobă și îți propunem outfituri."
-  },
-  "profile": {
-    "settings": "Setări",
+  "settings": {
+    "title": "Setări",
     "language": "Limbă",
-    "languageRo": "Română",
-    "languageEn": "Engleză",
-    "editStylePrefs": "Preferințele mele de stil",
+    "languageRo": "RO",
+    "languageEn": "EN",
+    "collections": "Colecțiile mele",
     "deleteAccount": "Șterge contul",
     "deleteAccountTitle": "Ștergi contul definitiv?",
-    "deleteAccountBody": "Toate hainele, colecțiile și datele tale se șterg permanent. Acțiunea nu poate fi anulată.",
-    "deleteAccountConfirm": "Da, șterge tot",
-    "signOut": "Ieși din cont"
+    "deleteAccountBody": "Toate piesele, colecțiile și datele tale se șterg permanent. Acțiunea nu poate fi anulată.",
+    "deleteAccountConfirm": "Da, șterge tot"
   }
 }

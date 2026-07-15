@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
+import { SparkleIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
@@ -19,6 +20,7 @@ import {
   useSignedImageUrl,
   useUpdateItem,
 } from '@/features/wardrobe/hooks';
+import { colors } from '@/lib/theme';
 
 const CATEGORIES = ItemCategorySchema.options;
 
@@ -27,6 +29,32 @@ function splitTags(text: string): string[] {
     .split(',')
     .map((tag) => tag.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function Chip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      className={`rounded-full px-4 py-2 ${selected ? 'bg-dark' : 'border border-field bg-bright'}`}
+    >
+      <Text
+        className={
+          selected ? 'font-sansmed text-[13px] text-bright' : 'font-sans text-[13px] text-soft'
+        }
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
 function ItemEditor({ item }: { item: Item }) {
@@ -42,7 +70,7 @@ function ItemEditor({ item }: { item: Item }) {
   const [brand, setBrand] = useState(item.brand ?? '');
   const [category, setCategory] = useState(item.category);
   const [subcategory, setSubcategory] = useState(item.subcategory ?? '');
-  const [colors, setColors] = useState(item.colors.join(', '));
+  const [itemColors, setItemColors] = useState(item.colors.join(', '));
   const [styleTags, setStyleTags] = useState(item.style_tags.join(', '));
   const [notes, setNotes] = useState(item.notes ?? '');
 
@@ -54,7 +82,7 @@ function ItemEditor({ item }: { item: Item }) {
         brand: brand.trim() || null,
         category,
         subcategory: subcategory.trim() || null,
-        colors: splitTags(colors),
+        colors: splitTags(itemColors),
         style_tags: splitTags(styleTags),
         notes: notes.trim() || null,
       },
@@ -80,35 +108,32 @@ function ItemEditor({ item }: { item: Item }) {
 
   return (
     <View className="gap-5 py-4">
-      <View className="aspect-[3/4] overflow-hidden rounded-3xl bg-paper">
+      <View className="h-[380px] overflow-hidden rounded-[18px] bg-imagebg">
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={{ flex: 1 }} contentFit="contain" />
         ) : null}
       </View>
 
       {item.ai_tagged ? (
-        <Text className="text-xs text-ink-faint">{t('item.aiTagged')}</Text>
+        <View className="flex-row items-center gap-2">
+          <SparkleIcon size={14} color={colors.muted} />
+          <Text className="font-sans text-[12px] text-muted">{t('item.aiTagged')}</Text>
+        </View>
       ) : null}
 
       <TextField label={t('addItem.itemTitle')} value={title} onChangeText={setTitle} />
       <TextField label={t('item.brand')} value={brand} onChangeText={setBrand} />
 
-      <View className="gap-1.5">
-        <Text className="text-sm font-medium text-ink-soft">{t('item.category')}</Text>
+      <View className="gap-2">
+        <Text className="text-[13px] font-sansmed text-label">{t('item.category')}</Text>
         <View className="flex-row flex-wrap gap-2">
           {CATEGORIES.map((option) => (
-            <Pressable
+            <Chip
               key={option}
-              accessibilityRole="button"
+              label={t(`item.categories.${option}`)}
+              selected={category === option}
               onPress={() => setCategory(category === option ? null : option)}
-              className={`h-10 items-center justify-center rounded-full border px-4 ${
-                category === option ? 'border-ink bg-ink' : 'border-ink/15 bg-paper'
-              }`}
-            >
-              <Text className={category === option ? 'font-medium text-paper' : 'text-ink-soft'}>
-                {t(`item.categories.${option}`)}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
       </View>
@@ -122,8 +147,8 @@ function ItemEditor({ item }: { item: Item }) {
       <TextField
         label={t('item.colors')}
         placeholder={t('item.colorsPlaceholder')}
-        value={colors}
-        onChangeText={setColors}
+        value={itemColors}
+        onChangeText={setItemColors}
       />
       <TextField
         label={t('item.styleTags')}
@@ -134,24 +159,18 @@ function ItemEditor({ item }: { item: Item }) {
       <TextField label={t('item.notes')} value={notes} onChangeText={setNotes} multiline />
 
       {userCollections.length > 0 ? (
-        <View className="gap-1.5">
-          <Text className="text-sm font-medium text-ink-soft">{t('collections.title')}</Text>
+        <View className="gap-2">
+          <Text className="text-[13px] font-sansmed text-label">{t('collections.title')}</Text>
           <View className="flex-row flex-wrap gap-2">
             {userCollections.map((collection) => {
               const member = (memberIds ?? []).includes(collection.id);
               return (
-                <Pressable
+                <Chip
                   key={collection.id}
-                  accessibilityRole="button"
+                  label={collection.name}
+                  selected={member}
                   onPress={() => toggleCollection.mutate({ collectionId: collection.id, member })}
-                  className={`h-10 items-center justify-center rounded-full border px-4 ${
-                    member ? 'border-ink bg-ink' : 'border-ink/15 bg-paper'
-                  }`}
-                >
-                  <Text className={member ? 'font-medium text-paper' : 'text-ink-soft'}>
-                    {collection.name}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -179,7 +198,7 @@ export default function ItemScreen() {
     <Screen>
       {isPending || !item ? (
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color="#1a1a1a" />
+          <ActivityIndicator color={colors.ink} />
         </View>
       ) : (
         <ItemEditor item={item} />
