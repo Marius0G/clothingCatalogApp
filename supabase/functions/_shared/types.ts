@@ -130,6 +130,31 @@ export const TrackedProductSchema = z.object({
 });
 export type TrackedProduct = z.infer<typeof TrackedProductSchema>;
 
+// ---------- alerts (M4) ----------
+
+export const AlertSchema = z.object({
+  id: z.uuid(),
+  user_id: z.uuid(),
+  tracked_product_id: z.uuid(),
+  kind: z.enum(['price_drop', 'restock']),
+  threshold: z.number().nullable(),
+  size: z.string().nullable(),
+  active: z.boolean(),
+  last_triggered_at: z.string().nullable(),
+  created_at: z.string(),
+});
+export type Alert = z.infer<typeof AlertSchema>;
+
+export const ProductSnapshotSchema = z.object({
+  id: z.number(),
+  tracked_product_id: z.uuid(),
+  price: z.number().nullable(),
+  currency: z.string().nullable(),
+  in_stock: z.boolean().nullable(),
+  captured_at: z.string(),
+});
+export type ProductSnapshot = z.infer<typeof ProductSnapshotSchema>;
+
 // ---------- product parsing (M2) ----------
 
 export const StoreSchema = z.enum(['zara', 'bershka', 'hm', 'vinted', 'generic']);

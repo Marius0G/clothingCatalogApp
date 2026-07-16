@@ -7,7 +7,9 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
 import * as WebBrowser from 'expo-web-browser';
 
+import { AlertToggles } from '@/components/alert-toggles';
 import { HangerIcon, LinkIcon, SparkleIcon } from '@/components/icons';
+import { PriceSparkline } from '@/components/price-sparkline';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
@@ -135,6 +137,9 @@ function ItemEditor({ item }: { item: Item }) {
           <Text className="font-sans text-[12px] text-muted">{t('item.aiTagged')}</Text>
         </View>
       ) : null}
+
+      {trackedProduct ? <AlertToggles trackedProductId={trackedProduct.id} /> : null}
+      {trackedProduct ? <PriceSparkline trackedProductId={trackedProduct.id} /> : null}
 
       {item.status === 'wishlist' || trackedProduct ? (
         <View className="gap-2.5">

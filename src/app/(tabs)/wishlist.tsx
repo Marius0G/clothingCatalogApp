@@ -6,7 +6,8 @@ import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BellIcon, InfoIcon, LinkIcon, PlusIcon } from '@/components/icons';
+import { AlertToggles } from '@/components/alert-toggles';
+import { InfoIcon, LinkIcon, PlusIcon } from '@/components/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ImportFailed, type WishlistEntry } from '@/features/wishlist/api';
 import { formatPrice, useImportFromLink, useWishlist } from '@/features/wishlist/hooks';
@@ -50,18 +51,11 @@ function WishlistCard({ entry }: { entry: WishlistEntry }) {
               {formatPrice(product.current_price, product.currency)}
             </Text>
           ) : null}
-          <View className="mt-auto flex-row gap-2 pt-2">
-            <View className="flex-1 flex-row items-center justify-center gap-1.5 rounded-[9px] border border-strong py-2">
-              <BellIcon size={13} color={colors.ink} strokeWidth={1.7} />
-              <Text className="font-sansmed text-[12px] text-ink">{t('wishlist.priceAlert')}</Text>
+          {product ? (
+            <View className="mt-auto pt-2">
+              <AlertToggles trackedProductId={product.id} />
             </View>
-            <View className="flex-1 flex-row items-center justify-center gap-1.5 rounded-[9px] border border-strong py-2">
-              <BellIcon size={13} color={colors.ink} strokeWidth={1.7} />
-              <Text className="font-sansmed text-[12px] text-ink">
-                {t('wishlist.restockAlert')}
-              </Text>
-            </View>
-          </View>
+          ) : null}
         </View>
       </Pressable>
     </Link>

@@ -54,6 +54,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       '@react-native-google-signin/google-signin',
       { iosUrlScheme: GOOGLE_IOS_URL_SCHEME },
     ],
+    [
+      'expo-share-intent',
+      {
+        iosActivationRules: {
+          NSExtensionActivationSupportsWebURLWithMaxCount: 1,
+          NSExtensionActivationSupportsText: true,
+        },
+        androidIntentFilters: ['text/*'],
+      },
+    ],
     './plugins/withMlkitManifestFix',
   ],
   experiments: {
