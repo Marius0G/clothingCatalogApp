@@ -1,7 +1,6 @@
 import type { Alert } from '@shared/types';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text } from 'react-native';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { BellIcon } from '@/components/icons';
 import { useAlerts, useToggleAlert } from '@/features/alerts/hooks';

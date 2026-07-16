@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 // Set in .env (see .env.example) — used at build time for the Google Sign-In iOS URL scheme.
@@ -7,7 +9,8 @@ const GOOGLE_IOS_URL_SCHEME =
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Clothing Catalog',
-  slug: 'clothingCatalogApp',
+  slug: 'clothesapp',
+  owner: 'marius0gs-team',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
@@ -23,6 +26,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'app.clothingcatalog.mobile',
+    // Apare după setup-ul Firebase (SETUP.md §7); build-ul merge și fără el.
+    ...(existsSync('./google-services.json')
+      ? { googleServicesFile: './google-services.json' }
+      : {}),
     adaptiveIcon: {
       backgroundColor: '#E6F4FE',
       foregroundImage: './assets/images/android-icon-foreground.png',
@@ -69,5 +76,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: { projectId: 'fd878087-39e1-437a-bb52-716aa8507ee4' },
   },
 });

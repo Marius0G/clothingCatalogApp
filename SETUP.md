@@ -23,12 +23,15 @@ npx eas build --profile development --platform ios
 
 Apoi local: `npx expo start` și deschizi aplicația din dev client.
 
-## 3. Google Sign-In
+## 3. Google Sign-In — ✅ Android GATA (16 iul 2026)
 
-1. [Google Cloud Console](https://console.cloud.google.com) → proiect nou → **OAuth consent screen** (External).
-2. Creează 3 OAuth Client IDs: **Web** (pentru Supabase), **Android** (package `app.clothingcatalog.mobile` + SHA-1 din `npx eas credentials`), **iOS** (bundle `app.clothingcatalog.mobile`).
-3. În Supabase: **Authentication → Providers → Google** → activează și pune Web client ID + secret.
-4. În `.env`: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (Web client ID) și `GOOGLE_IOS_URL_SCHEME` (iOS client ID inversat, îl vezi în consolă).
+Configurat pe proiectul Google Cloud **clothesapp-4cadf** (cel creat de Firebase):
+
+- Client OAuth **Web** `176054135803-c2k1gii3ogmv0mb6n6hu592ulrjs1r03...` → în `.env` (`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` + `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`); JSON-ul complet e păstrat gitignored în `google-oauth-web-client.json`.
+- Client OAuth **Android** cu package `app.clothingcatalog.mobile` + SHA-1 de debug (`5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`). ⚠️ La release, adaugă și SHA-1 al cheii de release (din `eas credentials`) ca al doilea fingerprint.
+- Providerul Google e activat și în stack-ul local (`supabase/config.toml`, secret prin `env()` din `.env`) și în cloud (via Management API, `skip_nonce_check=true` — fluxul nativ nu trimite nonce).
+
+Rămas pentru iOS (când există cont Apple Developer): client OAuth **iOS** (bundle `app.clothingcatalog.mobile`) → `GOOGLE_IOS_URL_SCHEME` în `.env`.
 
 ## 4. Apple Sign-In
 
@@ -51,12 +54,35 @@ curl -X POST https://kzoscldpakbhtpulujdw.supabase.co/functions/v1/ingest-affili
 
 (coloanele CSV sunt mapate flexibil — vezi `supabase/functions/ingest-affiliate/index.ts`; există și un feed de test în `sample-feed.csv`). Pentru rulare zilnică automată, adăugați un cron nou în migrare după modelul celor existente.
 
-## 7. Push notifications reale (opțional până la lansare)
+## 7. Push notifications reale — ✅ Android GATA (16 iul 2026)
 
-Outbox-ul + dispatcher-ul de notificări **funcționează deja** (cron la 5 min în cloud); ce lipsește e livrarea pe telefon, care cere:
-1. Cont Expo + `npx eas init` (setează `extra.eas.projectId` — codul de înregistrare push îl folosește automat).
-2. Proiect Firebase (gratuit) → FCM credentials încărcate cu `npx eas credentials` (Android).
-3. Rebuild dev client. Fără acești pași, notificările rămân în DB cu status `no_token` — nimic nu se pierde.
+Verificat cap-coadă pe emulator: Firebase `clothesapp-4cadf`, cheia FCM V1 încărcată în EAS (proiect `marius0gs-team/clothesapp`), token înregistrat în `push_tokens`, notificare livrată. Dispatcher-ul trimite cu `priority: high` (FCM amână mesajele normale pe device-uri în idle). iOS rămâne pentru când există cont Apple Developer. Pașii de mai jos rămân ca referință:
+
+### 7a. Expo / EAS (o singură dată)
+
+1. Cont gratuit pe [expo.dev](https://expo.dev).
+2. În terminal (interactiv): `npx eas login`, apoi `npx eas init`.
+3. `eas init` afișează un **projectId** (UUID). Config-ul fiind dinamic (`app.config.ts`), CLI-ul nu-l poate scrie singur — trebuie adăugat manual în `app.config.ts`:
+   ```ts
+   extra: { eas: { projectId: '<UUID-ul afișat>' } },
+   ```
+   `src/lib/push.ts` îl citește automat de acolo; fără el înregistrarea de token e no-op silențios.
+
+### 7b. Firebase / FCM
+
+4. [console.firebase.google.com](https://console.firebase.google.com) → **Add project** (ex. `clothing-catalog`; Google Analytics poate rămâne oprit).
+5. În proiect: **Add app → Android** → package name exact `app.clothingcatalog.mobile` (SHA-1 nu e necesar pentru push) → **Register**.
+6. Descarcă **`google-services.json`** și pune-l în **rădăcina repo-ului**. E deja în `.gitignore`, iar `app.config.ts` îl preia automat dacă există.
+7. Cheia pentru serverul de push Expo: Firebase → ⚙️ **Project settings → Service accounts → Generate new private key** → salvează JSON-ul ca `firebase-service-account.json` (tot gitignored; NU se comite).
+8. `npx eas credentials` (interactiv) → **Android** → profilul `development` → **Google Service Account** → **Manage … (FCM V1)** → **Set up** → dă calea către JSON-ul de la pasul 7.
+
+### 7c. Rebuild + test
+
+9. `google-services.json` intră în build-ul nativ, deci e nevoie de rebuild: `npx expo prebuild --platform android --clean` apoi `npx expo run:android`.
+10. Atenție la emulator: push-ul cere **Google Play services** (imagine AVD „Google Play"); pe o imagine fără Play services testează pe un telefon Android real.
+11. Verificare: deschide aplicația, acceptă permisiunea de notificări → apare un rând în `push_tokens`. Test rapid de livrare: [expo.dev/notifications](https://expo.dev/notifications) cu token-ul din DB; testul complet e pipeline-ul real (schimbi prețul unui produs urmărit → cron → notificare).
+
+Fără acești pași nimic nu se pierde: notificările rămân în DB cu status `no_token`.
 
 ## Note modele AI
 

@@ -41,7 +41,14 @@ Deno.serve(async (req) => {
   }
 
   const now = new Date().toISOString();
-  const messages: { to: string; title: string; body: string; data: unknown; _nid: string }[] = [];
+  const messages: {
+    to: string;
+    title: string;
+    body: string;
+    data: unknown;
+    priority: 'high';
+    _nid: string;
+  }[] = [];
   let noToken = 0;
 
   for (const notification of pending) {
@@ -60,6 +67,9 @@ Deno.serve(async (req) => {
         title: notification.title,
         body: notification.body,
         data: notification.payload,
+        // Normal-priority FCM messages get deferred on idle devices (verified
+        // on emulator: 'ok' receipt, no display); alerts must arrive promptly.
+        priority: 'high',
         _nid: notification.id,
       });
     }

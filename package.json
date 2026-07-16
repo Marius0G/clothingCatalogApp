@@ -57,8 +57,10 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "@types/react": "~19.2.2",
     "deno-bin": "^2.2.7",
+    "eas-cli": "^21.0.1",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.0",
     "supabase": "^2.109.1",

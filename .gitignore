@@ -44,3 +44,8 @@ example
 
 # local env
 .env
+
+# Firebase (conține chei de proiect — nu se comite)
+google-services.json
+firebase-service-account*.json
+google-oauth-web-client.json
