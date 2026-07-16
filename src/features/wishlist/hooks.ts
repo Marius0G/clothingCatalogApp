@@ -2,7 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/provider';
 
-import { getTrackedProduct, importFromLink, listWishlist, moveToWardrobe } from './api';
+import {
+  enhanceImportedItem,
+  getTrackedProduct,
+  importFromLink,
+  listWishlist,
+  moveToWardrobe,
+} from './api';
 
 export function useTrackedProduct(itemId: string, enabled = true) {
   return useQuery({
@@ -33,6 +39,14 @@ export function useImportFromLink() {
       queryClient.invalidateQueries({ queryKey: ['wishlist', userId] });
       queryClient.invalidateQueries({ queryKey: ['items', userId] });
       queryClient.invalidateQueries({ queryKey: ['collection-items'] });
+      // Fire-and-forget: cutout + AI tags land on the card seconds later.
+      enhanceImportedItem(item).then((updated) => {
+        if (!updated) return;
+        queryClient.setQueryData(['item', updated.id], updated);
+        queryClient.invalidateQueries({ queryKey: ['wishlist', userId] });
+        queryClient.invalidateQueries({ queryKey: ['items', userId] });
+        queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+      });
     },
   });
 }

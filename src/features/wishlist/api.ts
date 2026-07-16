@@ -4,8 +4,16 @@ import {
   type Item,
   type TrackedProduct,
 } from '@shared/types';
+import * as FileSystem from 'expo-file-system/legacy';
 import { z } from 'zod';
 
+import {
+  getSignedImageUrl,
+  requestAutoTags,
+  updateItem,
+  uploadItemImage,
+} from '@/features/wardrobe/api';
+import { tryRemoveBackground } from '@/lib/background-removal';
 import { supabase } from '@/lib/supabase';
 
 const BROWSER_HEADERS = {
@@ -91,6 +99,39 @@ export async function importFromLink(url: string): Promise<Item> {
     throw new ImportFailed(status === 422 ? 'parse' : 'generic');
   }
   return ItemSchema.parse(data.item);
+}
+
+/**
+ * Post-import enhancement, both strictly best-effort: (1) on-device background
+ * removal on the re-hosted shop photo, (2) AI tagging (fills category/colors/
+ * style, plus title/brand/description only where the parser left blanks).
+ * Returns the freshest item, or null when nothing changed.
+ */
+export async function enhanceImportedItem(item: Item): Promise<Item | null> {
+  let latest: Item | null = null;
+
+  // Shops that serve PNG almost always ship an already-clean cutout — skip.
+  if (item.image_path && !item.image_path.endsWith('.png')) {
+    try {
+      const signedUrl = await getSignedImageUrl(item.image_path);
+      const localUri = `${FileSystem.cacheDirectory}import-${item.id}.jpg`;
+      const download = await FileSystem.downloadAsync(signedUrl, localUri);
+      const cutoutUri = await tryRemoveBackground(download.uri);
+      if (cutoutUri) {
+        const mainPath = await uploadItemImage(item.user_id, item.id, cutoutUri, 'main', true);
+        latest = await updateItem(item.id, {
+          image_path: mainPath,
+          original_image_path: item.image_path,
+        });
+      }
+      FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+    } catch {
+      // enhancement only — the shop photo stays
+    }
+  }
+
+  const tagged = await requestAutoTags(item.id);
+  return tagged ?? latest;
 }
 
 /** Wishlist → wardrobe: flip status and leave the system Wishlist collection. */
