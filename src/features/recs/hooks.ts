@@ -2,9 +2,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/provider';
 
-import { getOutfits, NotEnoughItems } from './api';
+import { getOutfits, getPurchases, NotEnoughItems } from './api';
 
 export { NotEnoughItems };
+
+export function usePurchases() {
+  const { session } = useAuth();
+  return useQuery({
+    queryKey: ['purchases', session?.user.id],
+    queryFn: () => getPurchases(false),
+    enabled: !!session,
+    staleTime: 10 * 60 * 1000,
+    retry: (failureCount, error) => !(error instanceof NotEnoughItems) && failureCount < 2,
+  });
+}
 
 export function useOutfits() {
   const { session } = useAuth();

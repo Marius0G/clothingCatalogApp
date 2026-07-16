@@ -170,6 +170,34 @@ export const OutfitRecsSchema = z.object({
 });
 export type OutfitRecs = z.infer<typeof OutfitRecsSchema>;
 
+// ---------- purchase suggestions (M6) ----------
+
+/** Contract for the recommend-purchases edge function LLM output. */
+export const PurchasePickSchema = z.object({
+  catalog_product_id: z.uuid(),
+  rationale: z.string().min(1),
+});
+export const PurchaseRecsSchema = z.object({
+  suggestions: z.array(PurchasePickSchema).min(1).max(8),
+});
+export type PurchaseRecs = z.infer<typeof PurchaseRecsSchema>;
+
+export const CatalogProductSchema = z.object({
+  id: z.uuid(),
+  source: z.enum(['affiliate', 'scraped', 'organic']),
+  network: z.string(),
+  merchant: z.string().nullable(),
+  url: z.string(),
+  affiliate_url: z.string().nullable(),
+  title: z.string(),
+  brand: z.string().nullable(),
+  image_url: z.string().nullable(),
+  price: z.number().nullable(),
+  currency: z.string().nullable(),
+  category: z.string().nullable(),
+});
+export type CatalogProduct = z.infer<typeof CatalogProductSchema>;
+
 // ---------- product parsing (M2) ----------
 
 export const StoreSchema = z.enum(['zara', 'bershka', 'hm', 'vinted', 'generic']);

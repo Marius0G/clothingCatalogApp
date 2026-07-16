@@ -234,6 +234,28 @@ Deno.serve(async (req) => {
       .insert({ collection_id: wishlistCollection.id, item_id: item.id });
   }
 
+  // 3b) organic catalog: every import grows the recommendation pool at zero
+  // scraping cost (anonymous — only public product data, never the user).
+  if (product.external_id) {
+    await admin.from('catalog_products').upsert(
+      {
+        source: 'organic',
+        network: product.store,
+        merchant: product.store,
+        external_id: product.external_id,
+        url: product.canonical_url ?? url,
+        title: product.title,
+        brand: product.brand,
+        image_url: product.image_url,
+        price: product.price,
+        currency: product.currency,
+        active: true,
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'network,external_id' },
+    );
+  }
+
   // 4) re-host image (best effort)
   let finalItem = item;
   if (product.image_url) {

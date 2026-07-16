@@ -1,6 +1,7 @@
 import type { Item, Outfit } from '@shared/types';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -15,8 +16,14 @@ import {
   ThumbsUpIcon,
 } from '@/components/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { NotEnoughItems, useOutfits, useRegenerateOutfits } from '@/features/recs/hooks';
-import { useWishlist } from '@/features/wishlist/hooks';
+import type { PurchaseSuggestion } from '@/features/recs/api';
+import {
+  NotEnoughItems,
+  useOutfits,
+  usePurchases,
+  useRegenerateOutfits,
+} from '@/features/recs/hooks';
+import { formatPrice, useWishlist } from '@/features/wishlist/hooks';
 import { useItems, useSignedImageUrl } from '@/features/wardrobe/hooks';
 import { colors } from '@/lib/theme';
 
@@ -88,10 +95,50 @@ function OutfitCard({ outfit, itemsById }: { outfit: Outfit; itemsById: Map<stri
   );
 }
 
+function PurchaseCard({ suggestion }: { suggestion: PurchaseSuggestion }) {
+  const { t } = useTranslation();
+  const product = suggestion.product;
+  if (!product) return null;
+  const shopUrl = product.affiliate_url ?? product.url;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => WebBrowser.openBrowserAsync(shopUrl)}
+      className="w-[150px]"
+    >
+      <View className="h-[170px] overflow-hidden rounded-[14px] border border-hairline bg-card">
+        {product.image_url ? (
+          <Image source={{ uri: product.image_url }} style={{ flex: 1 }} contentFit="cover" />
+        ) : null}
+      </View>
+      {product.brand ? (
+        <Text className="mt-2 font-sans text-[12px] text-soft" numberOfLines={1}>
+          {product.brand}
+        </Text>
+      ) : null}
+      <Text className="mt-0.5 font-sansbold text-[13px] text-ink" numberOfLines={2}>
+        {product.title}
+      </Text>
+      <View className="mt-1.5 flex-row items-center justify-between">
+        {product.price != null ? (
+          <Text className="font-sansbold text-[14px] text-ink">
+            {formatPrice(product.price, product.currency)}
+          </Text>
+        ) : (
+          <View />
+        )}
+        <Text className="font-sansbold text-[12px] text-accent">{t('discover.shop')}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function DiscoverScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const outfitsQuery = useOutfits();
+  const purchasesQuery = usePurchases();
   const regenerate = useRegenerateOutfits();
   const { data: wardrobeItems } = useItems('wardrobe');
   const { data: wishlistEntries } = useWishlist();
@@ -161,6 +208,25 @@ export default function DiscoverScreen() {
           {outfits.map((outfit, index) => (
             <OutfitCard key={index} outfit={outfit} itemsById={itemsById} />
           ))}
+
+          {(purchasesQuery.data?.suggestions.length ?? 0) > 0 ? (
+            <View className="mt-3">
+              <Text className="font-serif text-[20px] text-ink">{t('discover.completes')}</Text>
+              <Text className="mt-0.5 font-sans text-[12.5px] text-muted">
+                {t('discover.completesSub')}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mt-3.5"
+                contentContainerClassName="gap-3"
+              >
+                {purchasesQuery.data!.suggestions.map((suggestion) => (
+                  <PurchaseCard key={suggestion.catalog_product_id} suggestion={suggestion} />
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
         </ScrollView>
       )}
     </View>
