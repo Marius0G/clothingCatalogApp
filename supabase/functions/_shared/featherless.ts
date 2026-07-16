@@ -24,7 +24,8 @@ export class AiUnavailable extends Error {}
 
 const DEFAULTS = {
   baseUrl: 'https://api.featherless.ai/v1',
-  textModel: 'meta-llama/Llama-3.3-70B-Instruct',
+  // Llama-3.3-70B is gated on Featherless (needs HF OAuth); Qwen is open.
+  textModel: 'Qwen/Qwen2.5-72B-Instruct',
   // 72B: the 7B variant is frequently at capacity on Featherless (verified 2026-07-16)
   visionModel: 'Qwen/Qwen2.5-VL-72B-Instruct',
 };

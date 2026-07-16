@@ -122,6 +122,8 @@
     "forYou": "Outfits for you",
     "regenerate": "Regenerate",
     "whyThis": "Why this works",
+    "generating": "Your AI stylist is composing outfits…",
+    "generationError": "Couldn't generate outfits right now. Try again in a few minutes.",
     "completes": "Completes your wardrobe",
     "completesSub": "Real pieces that match what you have",
     "shop": "Shop",

@@ -122,6 +122,8 @@
     "forYou": "Ținute pentru tine",
     "regenerate": "Regenerează",
     "whyThis": "De ce funcționează",
+    "generating": "Stilistul AI îți compune ținutele…",
+    "generationError": "Nu am putut genera ținute acum. Încearcă din nou în câteva minute.",
     "completes": "Îți completează garderoba",
     "completesSub": "Piese reale care se potrivesc cu ce ai",
     "shop": "Cumpără",

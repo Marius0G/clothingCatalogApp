@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChevronRightIcon, HangerIcon, HeartIcon, SparkleIcon } from '@/components/icons';
@@ -76,15 +76,15 @@ export default function HomeScreen() {
       <View className="mt-8 flex-row items-center justify-between">
         <Text className="font-serif text-[22px] text-ink">{t('home.outfitInsp')}</Text>
         <Link href="/discover" asChild>
-          <View className="flex-row items-center gap-1">
+          <Pressable className="flex-row items-center gap-1" hitSlop={8}>
             <Text className="font-sans text-[13px] text-soft">{t('common.viewAll')}</Text>
             <ChevronRightIcon size={15} color={colors.soft} />
-          </View>
+          </Pressable>
         </Link>
       </View>
 
       <Link href="/discover" asChild>
-        <View className="mt-3.5 items-center rounded-[18px] border border-hairline bg-card px-8 py-9">
+        <Pressable className="mt-3.5 items-center rounded-[18px] border border-hairline bg-card px-8 py-9 active:bg-paper">
           <SparkleIcon size={22} color={colors.iconmuted} />
           <Text className="mt-3 text-center font-serif text-[19px] text-ink">
             {t('home.emptyDiscTitle')}
@@ -92,7 +92,7 @@ export default function HomeScreen() {
           <Text className="mt-1.5 max-w-[250px] text-center font-sans text-[12.5px] leading-[19px] text-soft">
             {t('home.emptyDiscSub')}
           </Text>
-        </View>
+        </Pressable>
       </Link>
     </ScrollView>
   );

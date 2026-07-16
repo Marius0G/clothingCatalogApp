@@ -155,6 +155,21 @@ export const ProductSnapshotSchema = z.object({
 });
 export type ProductSnapshot = z.infer<typeof ProductSnapshotSchema>;
 
+// ---------- outfit recommendations (M5) ----------
+
+/** Contract for the recommend-outfits edge function LLM output. */
+export const OutfitSchema = z.object({
+  item_ids: z.array(z.uuid()).min(2).max(6),
+  occasion: z.string().min(1),
+  rationale: z.string().min(1),
+});
+export type Outfit = z.infer<typeof OutfitSchema>;
+
+export const OutfitRecsSchema = z.object({
+  outfits: z.array(OutfitSchema).min(1).max(5),
+});
+export type OutfitRecs = z.infer<typeof OutfitRecsSchema>;
+
 // ---------- product parsing (M2) ----------
 
 export const StoreSchema = z.enum(['zara', 'bershka', 'hm', 'vinted', 'generic']);
