@@ -39,9 +39,30 @@ Apoi local: `npx expo start` și deschizi aplicația din dev client.
 
 Cheia e setată ca secret pe funcțiile cloud și local în `supabase/functions/.env` (gitignored). Model vision: `Qwen/Qwen2.5-VL-72B-Instruct` (7B e frecvent la capacitate). Nu pune cheia NICIODATĂ în `.env`-ul aplicației (ar ajunge în bundle).
 
-## 6. Afiliere (necesar din M6 — pornit din M4, aprobarea durează săptămâni)
+## 6. Afiliere (aprobarea durează săptămâni — pornește aplicațiile devreme)
 
-Partenerul de business își face cont de afiliat pe **2performant.com** și **profitshare.ro** și aplică la programele advertiserilor de fashion (Answear, Fashion Days, ABOUT YOU etc.).
+Partenerul de business își face cont de afiliat pe **2performant.com** și **profitshare.ro** și aplică la programele advertiserilor de fashion (Answear, Fashion Days, ABOUT YOU etc.). Infrastructura există deja: când aveți URL-ul de feed real, îl ingerați cu:
+
+```
+curl -X POST https://kzoscldpakbhtpulujdw.supabase.co/functions/v1/ingest-affiliate \
+  -H "Authorization: Bearer <service_role_key>" -H "Content-Type: application/json" \
+  -d '{"feed_url":"<URL-ul feed-ului CSV>","network":"2performant"}'
+```
+
+(coloanele CSV sunt mapate flexibil — vezi `supabase/functions/ingest-affiliate/index.ts`; există și un feed de test în `sample-feed.csv`). Pentru rulare zilnică automată, adăugați un cron nou în migrare după modelul celor existente.
+
+## 7. Push notifications reale (opțional până la lansare)
+
+Outbox-ul + dispatcher-ul de notificări **funcționează deja** (cron la 5 min în cloud); ce lipsește e livrarea pe telefon, care cere:
+1. Cont Expo + `npx eas init` (setează `extra.eas.projectId` — codul de înregistrare push îl folosește automat).
+2. Proiect Firebase (gratuit) → FCM credentials încărcate cu `npx eas credentials` (Android).
+3. Rebuild dev client. Fără acești pași, notificările rămân în DB cu status `no_token` — nimic nu se pierde.
+
+## Note modele AI
+
+- Text: `Qwen/Qwen2.5-72B-Instruct` (Llama-3.3 e gated pe Featherless — ar cere verificare HuggingFace).
+- Vision: `Qwen/Qwen2.5-VL-72B-Instruct` (7B e frecvent la capacitate).
+- Ambele se pot suprascrie prin secrets: `TEXT_MODEL`, `VISION_MODEL`, `VISION_BASE_URL`, `VISION_API_KEY`.
 
 ## Verificare rapidă că totul e legat
 

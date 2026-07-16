@@ -6,6 +6,7 @@
 //   image_url/image, url/product_url, affiliate_url/aff_link, merchant
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { isServiceRole } from '../_shared/auth.ts';
 import { handleOptions, jsonResponse } from '../_shared/cors.ts';
 import { parsePrice } from '../_shared/parsers/index.ts';
 
@@ -82,11 +83,13 @@ Deno.serve(async (req) => {
   const options = handleOptions(req);
   if (options) return options;
 
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  if (req.headers.get('Authorization') !== `Bearer ${serviceKey}`) {
+  if (!isServiceRole(req)) {
     return jsonResponse({ error: 'service role only' }, 401);
   }
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
 
   const body = await req.json().catch(() => ({}));
   let csv: string | null = typeof body?.csv === 'string' ? body.csv : null;
