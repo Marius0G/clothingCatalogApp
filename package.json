@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "deno-bin": "^2.2.7",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.0",
     "supabase": "^2.109.1",

@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
-import { SparkleIcon } from '@/components/icons';
+import * as WebBrowser from 'expo-web-browser';
+
+import { HangerIcon, LinkIcon, SparkleIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
@@ -14,6 +16,11 @@ import {
   useItemCollectionIds,
   useToggleItemInCollection,
 } from '@/features/collections/hooks';
+import {
+  formatPrice,
+  useMoveToWardrobe,
+  useTrackedProduct,
+} from '@/features/wishlist/hooks';
 import {
   useDeleteItem,
   useItem,
@@ -62,6 +69,8 @@ function ItemEditor({ item }: { item: Item }) {
   const { data: imageUrl } = useSignedImageUrl(item.image_path);
   const updateItem = useUpdateItem();
   const deleteItem = useDeleteItem();
+  const moveToWardrobe = useMoveToWardrobe();
+  const { data: trackedProduct } = useTrackedProduct(item.id, item.source === 'link');
   const { data: collections } = useCollections();
   const { data: memberIds } = useItemCollectionIds(item.id);
   const toggleCollection = useToggleItemInCollection(item.id);
@@ -114,10 +123,38 @@ function ItemEditor({ item }: { item: Item }) {
         ) : null}
       </View>
 
+      {trackedProduct?.current_price != null ? (
+        <Text className="font-sansbold text-[20px] text-ink">
+          {formatPrice(trackedProduct.current_price, trackedProduct.currency)}
+        </Text>
+      ) : null}
+
       {item.ai_tagged ? (
         <View className="flex-row items-center gap-2">
           <SparkleIcon size={14} color={colors.muted} />
           <Text className="font-sans text-[12px] text-muted">{t('item.aiTagged')}</Text>
+        </View>
+      ) : null}
+
+      {item.status === 'wishlist' || trackedProduct ? (
+        <View className="gap-2.5">
+          {item.status === 'wishlist' ? (
+            <Button
+              variant="secondary"
+              label={t('item.moveToWardrobe')}
+              icon={<HangerIcon size={18} color={colors.ink} />}
+              loading={moveToWardrobe.isPending}
+              onPress={() => moveToWardrobe.mutate(item.id)}
+            />
+          ) : null}
+          {trackedProduct ? (
+            <Button
+              variant="ghost"
+              label={t('item.openLink')}
+              icon={<LinkIcon size={16} color={colors.soft} />}
+              onPress={() => WebBrowser.openBrowserAsync(trackedProduct.url)}
+            />
+          ) : null}
         </View>
       ) : null}
 

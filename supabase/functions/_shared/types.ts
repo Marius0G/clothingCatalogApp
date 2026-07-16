@@ -104,6 +104,32 @@ export const ItemTagsSchema = z.object({
 });
 export type ItemTags = z.infer<typeof ItemTagsSchema>;
 
+// ---------- tracked products (M2) ----------
+
+export const TrackedProductSchema = z.object({
+  id: z.uuid(),
+  item_id: z.uuid(),
+  user_id: z.uuid(),
+  url: z.string(),
+  canonical_url: z.string().nullable(),
+  store: z.enum(['zara', 'bershka', 'hm', 'vinted', 'generic']),
+  external_id: z.string().nullable(),
+  currency: z.string().nullable(),
+  current_price: z.number().nullable(),
+  original_price: z.number().nullable(),
+  sizes_available: z
+    .array(z.object({ size: z.string(), in_stock: z.boolean() }))
+    .nullable(),
+  in_stock: z.boolean().nullable(),
+  parse_method: z.enum(['dedicated', 'og', 'llm']).nullable(),
+  fetch_strategy: z.enum(['server', 'client']),
+  last_checked_at: z.string().nullable(),
+  check_failures: z.number().int(),
+  stale: z.boolean(),
+  created_at: z.string(),
+});
+export type TrackedProduct = z.infer<typeof TrackedProductSchema>;
+
 // ---------- product parsing (M2) ----------
 
 export const StoreSchema = z.enum(['zara', 'bershka', 'hm', 'vinted', 'generic']);
