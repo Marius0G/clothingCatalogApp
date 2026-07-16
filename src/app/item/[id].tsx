@@ -8,7 +8,7 @@ import { ActivityIndicator, Alert, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 
 import { AlertToggles } from '@/components/alert-toggles';
-import { HangerIcon, LinkIcon, SparkleIcon } from '@/components/icons';
+import { CheckIcon, HangerIcon, LinkIcon, RegenerateIcon, SparkleIcon } from '@/components/icons';
 import { PriceSparkline } from '@/components/price-sparkline';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
@@ -24,9 +24,11 @@ import {
   useMoveToWardrobe,
   useTrackedProduct,
 } from '@/features/wishlist/hooks';
+import { useRecordWear } from '@/features/outfits/hooks';
 import {
   useDeleteItem,
   useItem,
+  useRequestAutoTags,
   useSignedImageUrl,
   useUpdateItem,
 } from '@/features/wardrobe/hooks';
@@ -46,6 +48,9 @@ function ItemEditor({ item }: { item: Item }) {
   const { data: imageUrl } = useSignedImageUrl(item.image_path);
   const updateItem = useUpdateItem();
   const deleteItem = useDeleteItem();
+  const recordWear = useRecordWear();
+  const requestAutoTags = useRequestAutoTags();
+  const [retagging, setRetagging] = useState(false);
   const moveToWardrobe = useMoveToWardrobe();
   const { data: trackedProduct } = useTrackedProduct(item.id, item.source === 'link');
   const { data: collections } = useCollections();
@@ -110,6 +115,41 @@ function ItemEditor({ item }: { item: Item }) {
         <View className="flex-row items-center gap-2">
           <SparkleIcon size={14} color={colors.muted} />
           <Text className="font-sans text-[12px] text-muted">{t('item.aiTagged')}</Text>
+        </View>
+      ) : null}
+
+      {item.status === 'wardrobe' ? (
+        <View className="gap-2.5">
+          {item.times_worn > 0 ? (
+            <Text className="font-sans text-[12.5px] text-soft">
+              {t('item.wornTimes', { n: item.times_worn })}
+            </Text>
+          ) : null}
+          <Button
+            variant="secondary"
+            label={t('item.woreIt')}
+            icon={<CheckIcon size={16} color={colors.ink} strokeWidth={2} />}
+            loading={recordWear.isPending}
+            onPress={() => recordWear.mutate([item.id])}
+          />
+          <Button
+            variant="secondary"
+            label={t('item.styleThis')}
+            icon={<SparkleIcon size={16} color={colors.ink} />}
+            onPress={() => router.push({ pathname: '/discover', params: { anchor: item.id } })}
+          />
+          {item.image_path ? (
+            <Button
+              variant="ghost"
+              label={retagging ? t('addItem.aiThinking') : t('item.retag')}
+              icon={<RegenerateIcon size={15} color={colors.soft} />}
+              loading={retagging}
+              onPress={() => {
+                setRetagging(true);
+                requestAutoTags(item.id).finally(() => setRetagging(false));
+              }}
+            />
+          ) : null}
         </View>
       ) : null}
 

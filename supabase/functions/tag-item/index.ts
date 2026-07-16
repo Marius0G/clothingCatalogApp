@@ -6,11 +6,21 @@
 import { encodeBase64 } from 'jsr:@std/encoding/base64';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { isServiceRole } from '../_shared/auth.ts';
 import { handleOptions, jsonResponse } from '../_shared/cors.ts';
 import { AiUnavailable, chatCompletion, extractJson } from '../_shared/featherless.ts';
 import { checkAiBudget, recordAiUsage } from '../_shared/rateLimit.ts';
-import { ItemTagsSchema, type ItemTags } from '../_shared/types.ts';
+import {
+  CanonicalColorSchema,
+  ItemFitSchema,
+  ItemMaterialSchema,
+  ItemPatternSchema,
+  ItemTagsSchema,
+  OccasionSchema,
+  type ItemTags,
+} from '../_shared/types.ts';
 
+// Style tags are canonical English (engine vocabulary); UI shows them as-is.
 const STYLE_VOCAB =
   'casual, elegant, streetwear, sporty, formal, vintage, minimalist, boho, business, party, beach, cozy';
 // ~1200px JPEG at quality 0.85 stays well under this; anything bigger is abuse.
@@ -24,9 +34,18 @@ function prompt(locale: string): string {
     '- "brand": the brand name ONLY if a logo or label is clearly identifiable in the photo, otherwise null. Never guess.',
     '- "category": one of "top","bottom","dress","outerwear","shoes","accessory" (always these exact English values)',
     `- "subcategory": the specific garment type (e.g. t-shirt, jeans, sneakers), in ${lang}, lowercase`,
-    `- "colors": array of 1-4 dominant colors of the garment, simple color names in ${lang}, lowercase`,
-    `- "style_tags": array of 2-6 style descriptors in ${lang}, lowercase, preferring: ${STYLE_VOCAB}`,
+    `- "colors": array of 1-4 dominant colors of the garment, exactly from: ${CanonicalColorSchema.options.join(', ')}`,
+    `- "style_tags": array of 2-6 style descriptors in English, lowercase, preferring: ${STYLE_VOCAB}`,
+    `- "pattern": one of ${ItemPatternSchema.options.map((v) => `"${v}"`).join(',')}`,
+    `- "material": the main visible/likely material, one of ${ItemMaterialSchema.options.map((v) => `"${v}"`).join(',')}`,
+    `- "fit": one of ${ItemFitSchema.options.map((v) => `"${v}"`).join(',')}, or null for shoes/accessories`,
+    '- "formality": integer 1-5 (1=gym/lounge, 2=casual, 3=smart casual, 4=business, 5=formal)',
+    '- "warmth": integer 1-5 (1=hot-weather piece, 3=mid-season, 5=heavy winter)',
+    '- "seasons": array of suitable seasons from "spring","summer","autumn","winter"',
+    `- "occasions": array of 1-4 typical wearing occasions from: ${OccasionSchema.options.join(', ')}`,
+    '- "layer": how it layers on the torso — "base" (t-shirts, shirts, dresses), "mid" (sweaters, hoodies, cardigans), "outer" (jackets, coats), "none" (bottoms, shoes, accessories)',
     `- "description": 1-2 short sentences in ${lang} describing the garment (cut, material if visible, what it pairs well with)`,
+    'All attribute values must be the exact English tokens listed above; only title, subcategory and description are localized.',
     'Ignore the background and any person wearing the item; describe the garment itself.',
   ].join('\n');
 }
@@ -43,11 +62,20 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  const { data: userData, error: userError } = await admin.auth.getUser(
-    authHeader.replace('Bearer ', ''),
-  );
-  if (userError || !userData.user) return jsonResponse({ error: 'invalid token' }, 401);
-  const userId = userData.user.id;
+  // Service-role callers (backfill script) may tag any existing item; the
+  // owning user is taken from the item row so budget/usage still attribute
+  // to them. Normal callers must present a user JWT.
+  const service = isServiceRole(req);
+  let userId: string;
+  if (service) {
+    userId = ''; // resolved from the item row below
+  } else {
+    const { data: userData, error: userError } = await admin.auth.getUser(
+      authHeader.replace('Bearer ', ''),
+    );
+    if (userError || !userData.user) return jsonResponse({ error: 'invalid token' }, 401);
+    userId = userData.user.id;
+  }
 
   const body = await req.json().catch(() => null);
   const itemId = typeof body?.item_id === 'string' ? body.item_id : null;
@@ -55,11 +83,17 @@ Deno.serve(async (req) => {
   if (!itemId && !imageBase64) {
     return jsonResponse({ error: 'item_id or image_base64 required' }, 400);
   }
+  if (service && !itemId) {
+    return jsonResponse({ error: 'service calls require item_id' }, 400);
+  }
 
   let imageDataUrl: string;
   if (itemId) {
     const { data: item } = await admin.from('items').select('*').eq('id', itemId).single();
-    if (!item || item.user_id !== userId) return jsonResponse({ error: 'item not found' }, 404);
+    if (!item || (!service && item.user_id !== userId)) {
+      return jsonResponse({ error: 'item not found' }, 404);
+    }
+    if (service) userId = item.user_id;
     if (!item.image_path) return jsonResponse({ error: 'item has no image' }, 400);
 
     // Base64 data URL: works from any deployment (local signed URLs would be
@@ -109,7 +143,8 @@ Deno.serve(async (req) => {
             { type: 'image_url', image_url: { url: imageDataUrl } },
           ],
         },
-      ]);
+        // v2 extracts ~8 extra attribute fields; the default 512 can truncate.
+      ], { maxTokens: 800 });
       totalPrompt += result.promptTokens;
       totalCompletion += result.completionTokens;
       model = result.model;
@@ -148,6 +183,14 @@ Deno.serve(async (req) => {
         subcategory: tags.subcategory,
         colors: tags.colors,
         style_tags: tags.style_tags,
+        pattern: tags.pattern,
+        material: tags.material,
+        fit: tags.fit,
+        formality: tags.formality,
+        warmth: tags.warmth,
+        seasons: tags.seasons,
+        occasions: tags.occasions,
+        layer: tags.layer,
         ai_tagged: true,
       })
       .eq('id', itemId)

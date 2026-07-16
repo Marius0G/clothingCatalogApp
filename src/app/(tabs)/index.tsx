@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ChevronRightIcon, HangerIcon, HeartIcon, SparkleIcon } from '@/components/icons';
+import { BookmarkIcon, ChevronRightIcon, HangerIcon, HeartIcon, SparkleIcon } from '@/components/icons';
+import { useSavedOutfits } from '@/features/outfits/hooks';
 import { useProfile } from '@/features/profile/hooks';
 import { useItems } from '@/features/wardrobe/hooks';
 import { colors } from '@/lib/theme';
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const { data: profile } = useProfile();
   const { data: wardrobeItems } = useItems('wardrobe');
   const { data: wishlistItems } = useItems('wishlist');
+  const { data: savedOutfits } = useSavedOutfits();
 
   const name = profile?.nickname ? `, ${profile.nickname}` : '';
 
@@ -61,14 +63,18 @@ export default function HomeScreen() {
           value={wardrobeItems?.length ?? 0}
           label={t('home.statWardrobe')}
         />
+        <Link href="/outfits" asChild>
+          <Pressable className="flex-1">
+            <StatCard
+              icon={<BookmarkIcon size={19} color={colors.ink} strokeWidth={1.5} />}
+              value={savedOutfits?.length ?? 0}
+              label={t('home.statOutfits')}
+            />
+          </Pressable>
+        </Link>
         <StatCard
           icon={<SparkleIcon size={19} color={colors.ink} />}
-          value={0}
-          label={t('home.statOutfits')}
-        />
-        <StatCard
-          icon={<SparkleIcon size={19} color={colors.ink} />}
-          value={0}
+          value={savedOutfits?.filter((o) => o.source === 'ai').length ?? 0}
           label={t('home.statAiLooks')}
         />
       </View>

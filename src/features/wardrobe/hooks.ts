@@ -73,14 +73,14 @@ export function useDeleteItem() {
 export function useRequestAutoTags() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
-  return (itemId: string) => {
+  return (itemId: string) =>
     requestAutoTags(itemId).then((item) => {
       if (item) {
         queryClient.setQueryData(['item', item.id], item);
         queryClient.invalidateQueries({ queryKey: ['items', session?.user.id] });
       }
+      return item;
     });
-  };
 }
 
 /** Signed URL for a private storage path; cached just under the URL's lifetime. */

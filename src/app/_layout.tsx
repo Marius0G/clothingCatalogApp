@@ -90,6 +90,7 @@ function RootNavigator() {
         <Stack.Screen name="share-import" />
         <Stack.Screen name="item/[id]" />
         <Stack.Screen name="discover" />
+        <Stack.Screen name="outfits" />
         <Stack.Screen name="collections/index" />
         <Stack.Screen name="collections/[id]" />
       </Stack.Protected>

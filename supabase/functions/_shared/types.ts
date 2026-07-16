@@ -26,6 +26,7 @@ export const ProfileSchema = z.object({
   birth_year: z.number().int().min(1900).max(2100).nullable(),
   sizes: SizesSchema,
   style_preferences: z.string().nullable(),
+  no_go: z.string().nullable(),
   locale: LocaleSchema,
   onboarded_at: z.string().nullable(),
   created_at: z.string(),
@@ -53,6 +54,37 @@ export type ItemCategory = z.infer<typeof ItemCategorySchema>;
 export const ItemStatusSchema = z.enum(['wishlist', 'wardrobe']);
 export type ItemStatus = z.infer<typeof ItemStatusSchema>;
 
+// Structured attributes (outfit engine v2). Values are canonical English —
+// they are the vocabulary the recommender filters/scores on; the UI localizes
+// them at display time. Must stay in sync with the checks in migration 0003.
+
+export const CanonicalColorSchema = z.enum([
+  'black', 'white', 'cream', 'beige', 'tan', 'brown', 'grey', 'silver', 'gold',
+  'navy', 'blue', 'light-blue', 'red', 'burgundy', 'pink', 'purple', 'green',
+  'olive', 'yellow', 'orange', 'multicolor',
+]);
+export type CanonicalColor = z.infer<typeof CanonicalColorSchema>;
+
+export const ItemPatternSchema = z.enum([
+  'solid', 'stripe', 'check', 'floral', 'print', 'melange', 'denim', 'other',
+]);
+export const ItemMaterialSchema = z.enum([
+  'cotton', 'denim', 'wool', 'knit', 'linen', 'leather', 'suede', 'silk',
+  'synthetic', 'fleece', 'other',
+]);
+export const ItemFitSchema = z.enum([
+  'slim', 'regular', 'relaxed', 'oversized', 'straight', 'wide',
+]);
+export const ItemLayerSchema = z.enum(['base', 'mid', 'outer', 'none']);
+export const SeasonSchema = z.enum(['spring', 'summer', 'autumn', 'winter']);
+export type Season = z.infer<typeof SeasonSchema>;
+export const OccasionSchema = z.enum([
+  'everyday', 'office', 'evening', 'sport', 'event', 'travel', 'beach', 'home',
+]);
+export type Occasion = z.infer<typeof OccasionSchema>;
+export const WeatherSchema = z.enum(['hot', 'mild', 'cool', 'cold']);
+export type Weather = z.infer<typeof WeatherSchema>;
+
 export const ItemSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),
@@ -64,6 +96,18 @@ export const ItemSchema = z.object({
   subcategory: z.string().nullable(),
   colors: z.array(z.string()),
   style_tags: z.array(z.string()),
+  // v2 attributes — nullable/empty on rows tagged before migration 0003;
+  // filled by tag-item (re-tag from the item screen backfills old pieces).
+  pattern: ItemPatternSchema.nullable(),
+  material: ItemMaterialSchema.nullable(),
+  fit: ItemFitSchema.nullable(),
+  formality: z.number().int().min(1).max(5).nullable(),
+  warmth: z.number().int().min(1).max(5).nullable(),
+  seasons: z.array(z.string()),
+  occasions: z.array(z.string()),
+  layer: ItemLayerSchema.nullable(),
+  times_worn: z.number().int(),
+  last_worn_at: z.string().nullable(),
   ai_tagged: z.boolean(),
   image_path: z.string().nullable(),
   original_image_path: z.string().nullable(),
@@ -95,14 +139,48 @@ export type Collection = z.infer<typeof CollectionSchema>;
 
 // ---------- AI contracts ----------
 
-/** Contract for the tag-item edge function (vision auto-tagging, M1). */
+/**
+ * Lenient enum helpers for LLM output: lowercase/trim before matching, and
+ * degrade gracefully (fallback scalar / filtered array) instead of failing the
+ * whole parse over one stray value — a failed parse costs a full retry call.
+ */
+const lower = (value: unknown) =>
+  typeof value === 'string' ? value.toLowerCase().trim() : value;
+
+function lenientEnum<T extends z.ZodType<string>>(schema: T) {
+  return z.preprocess(lower, schema);
+}
+
+function lenientEnumArray<T extends z.ZodType<string>>(
+  schema: T,
+  fallback: z.infer<T>[],
+  max = 6,
+) {
+  return z.preprocess((value) => {
+    const valid = (Array.isArray(value) ? value : [value])
+      .map(lower)
+      .filter((entry) => schema.safeParse(entry).success);
+    const unique = [...new Set(valid)].slice(0, max);
+    return unique.length ? unique : fallback;
+  }, z.array(schema).min(1));
+}
+
+/** Contract for the tag-item edge function (vision auto-tagging, M1 + v2 attrs). */
 export const ItemTagsSchema = z.object({
   title: z.string().max(80),
   brand: z.string().max(60).nullable(),
   category: ItemCategorySchema,
   subcategory: z.string(),
-  colors: z.array(z.string()).max(4),
+  colors: lenientEnumArray(CanonicalColorSchema, ['multicolor'], 4),
   style_tags: z.array(z.string()).max(6),
+  pattern: lenientEnum(ItemPatternSchema).catch('other'),
+  material: lenientEnum(ItemMaterialSchema).catch('other'),
+  fit: lenientEnum(ItemFitSchema).nullable().catch(null),
+  formality: z.coerce.number().int().min(1).max(5).catch(3),
+  warmth: z.coerce.number().int().min(1).max(5).catch(3),
+  seasons: lenientEnumArray(SeasonSchema, [...SeasonSchema.options]),
+  occasions: lenientEnumArray(OccasionSchema, ['everyday']),
+  layer: lenientEnum(ItemLayerSchema).catch('none'),
   description: z.string().max(400),
 });
 export type ItemTags = z.infer<typeof ItemTagsSchema>;
@@ -158,7 +236,16 @@ export const ProductSnapshotSchema = z.object({
 });
 export type ProductSnapshot = z.infer<typeof ProductSnapshotSchema>;
 
-// ---------- outfit recommendations (M5) ----------
+// ---------- outfit recommendations (M5, engine v2) ----------
+
+/** Request context the app sends to recommend-outfits. */
+export const OutfitRequestSchema = z.object({
+  regenerate: z.boolean().optional(),
+  occasion: OccasionSchema.optional(),
+  weather: WeatherSchema.optional(),
+  anchor_item_id: z.uuid().optional(),
+});
+export type OutfitRequest = z.infer<typeof OutfitRequestSchema>;
 
 /** Contract for the recommend-outfits edge function LLM output. */
 export const OutfitSchema = z.object({
@@ -168,10 +255,23 @@ export const OutfitSchema = z.object({
 });
 export type Outfit = z.infer<typeof OutfitSchema>;
 
+// The LLM is asked for 6 candidates; the rule scorer returns the best few.
 export const OutfitRecsSchema = z.object({
-  outfits: z.array(OutfitSchema).min(1).max(5),
+  outfits: z.array(OutfitSchema).min(1).max(6),
 });
 export type OutfitRecs = z.infer<typeof OutfitRecsSchema>;
+
+/** A saved outfit row (outfits table); items live in outfit_items. */
+export const SavedOutfitSchema = z.object({
+  id: z.uuid(),
+  user_id: z.uuid(),
+  title: z.string(),
+  rationale: z.string().nullable(),
+  occasion: z.string().nullable(),
+  source: z.enum(['ai', 'manual']),
+  created_at: z.string(),
+});
+export type SavedOutfit = z.infer<typeof SavedOutfitSchema>;
 
 // ---------- purchase suggestions (M6) ----------
 

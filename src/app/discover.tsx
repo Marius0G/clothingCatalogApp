@@ -1,31 +1,52 @@
-import type { Item, Outfit } from '@shared/types';
+import type { Item, Occasion, Outfit, Weather } from '@shared/types';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
+  BookmarkIcon,
   ChevronLeftIcon,
+  CloseIcon,
   HangerIcon,
+  LocationIcon,
   RegenerateIcon,
   SparkleIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from '@/components/icons';
+import { Chip } from '@/components/ui/chip';
 import { EmptyState } from '@/components/ui/empty-state';
+import {
+  outfitItemsKey,
+  useOutfitVotes,
+  useSavedOutfits,
+  useSaveOutfit,
+  useSendOutfitFeedback,
+  type OutfitVote,
+} from '@/features/outfits/hooks';
 import type { PurchaseSuggestion } from '@/features/recs/api';
 import {
   NotEnoughItems,
   useOutfits,
   usePurchases,
   useRegenerateOutfits,
+  type OutfitContext,
 } from '@/features/recs/hooks';
 import { formatPrice, useWishlist } from '@/features/wishlist/hooks';
 import { useItems, useSignedImageUrl } from '@/features/wardrobe/hooks';
 import { colors } from '@/lib/theme';
+import {
+  detectCurrentWeather,
+  hasLocationPermission,
+  requestLocationPermission,
+} from '@/lib/weather';
+
+const OCCASIONS: Occasion[] = ['everyday', 'office', 'evening', 'sport', 'event', 'travel'];
+const WEATHERS: Weather[] = ['hot', 'mild', 'cool', 'cold'];
 
 function OutfitThumb({ item }: { item: Item | undefined }) {
   const { data: imageUrl } = useSignedImageUrl(item?.image_path ?? null);
@@ -47,10 +68,27 @@ function OutfitThumb({ item }: { item: Item | undefined }) {
   );
 }
 
-function OutfitCard({ outfit, itemsById }: { outfit: Outfit; itemsById: Map<string, Item> }) {
+function OutfitCard({
+  outfit,
+  itemsById,
+  requestedOccasion,
+  vote,
+  saved,
+}: {
+  outfit: Outfit;
+  itemsById: Map<string, Item>;
+  requestedOccasion: string | null;
+  vote: OutfitVote | null;
+  saved: boolean;
+}) {
   const { t } = useTranslation();
-  const [vote, setVote] = useState<'up' | 'down' | null>(null);
+  const sendFeedback = useSendOutfitFeedback();
+  const saveOutfit = useSaveOutfit();
   const items = outfit.item_ids.map((id) => itemsById.get(id)).filter(Boolean) as Item[];
+
+  const setVote = (next: OutfitVote | null) => {
+    sendFeedback.mutate({ outfit, occasion: requestedOccasion, vote: next });
+  };
 
   return (
     <View className="overflow-hidden rounded-[18px] border border-hairline bg-card">
@@ -70,7 +108,7 @@ function OutfitCard({ outfit, itemsById }: { outfit: Outfit; itemsById: Map<stri
             {outfit.rationale}
           </Text>
         </View>
-        <View className="mt-4 flex-row gap-2.5">
+        <View className="mt-4 flex-row items-center gap-2.5">
           <Pressable
             accessibilityRole="button"
             onPress={() => setVote(vote === 'up' ? null : 'up')}
@@ -88,6 +126,26 @@ function OutfitCard({ outfit, itemsById }: { outfit: Outfit; itemsById: Map<stri
             }`}
           >
             <ThumbsDownIcon size={18} color={vote === 'down' ? colors.bright : colors.muted} />
+          </Pressable>
+          <View className="flex-1" />
+          <Pressable
+            accessibilityRole="button"
+            disabled={saved || saveOutfit.isPending}
+            onPress={() => saveOutfit.mutate({ outfit, occasion: requestedOccasion })}
+            className={`h-[42px] flex-row items-center justify-center gap-1.5 rounded-[11px] border px-3.5 ${
+              saved ? 'border-dark bg-dark' : 'border-strong'
+            }`}
+          >
+            {saveOutfit.isPending ? (
+              <ActivityIndicator size="small" color={colors.ink} />
+            ) : (
+              <BookmarkIcon size={16} color={saved ? colors.bright : colors.ink} />
+            )}
+            <Text
+              className={`font-sansmed text-[12.5px] ${saved ? 'text-bright' : 'text-ink'}`}
+            >
+              {saved ? t('discover.savedOutfit') : t('discover.saveOutfit')}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -137,11 +195,68 @@ function PurchaseCard({ suggestion }: { suggestion: PurchaseSuggestion }) {
 export default function DiscoverScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const outfitsQuery = useOutfits();
+  const { anchor } = useLocalSearchParams<{ anchor?: string }>();
+  const [occasion, setOccasion] = useState<Occasion | null>(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const [weatherAuto, setWeatherAuto] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  // Set once the user picks weather manually — a slow auto-detect finishing
+  // afterwards must not override their choice.
+  const userChoseWeather = useRef(false);
+
+  const runAutoWeather = async (silent: boolean) => {
+    setDetecting(true);
+    const detected = await detectCurrentWeather();
+    setDetecting(false);
+    if (!detected || (silent && userChoseWeather.current)) return;
+    setWeather(detected);
+    setWeatherAuto(true);
+  };
+
+  useEffect(() => {
+    // Already granted (from a previous session) → prefill silently, no prompt.
+    hasLocationPermission().then((granted) => {
+      if (granted) runAutoWeather(true);
+    });
+  }, []);
+
+  const onAutoWeatherPress = async () => {
+    userChoseWeather.current = false;
+    if (await hasLocationPermission()) {
+      runAutoWeather(false);
+      return;
+    }
+    // In-app explainer BEFORE the OS permission dialog: location is used only
+    // for local weather, and it's optional.
+    Alert.alert(t('discover.locationTitle'), t('discover.locationBody'), [
+      { text: t('common.skip'), style: 'cancel' },
+      {
+        text: t('common.continue'),
+        onPress: async () => {
+          if (await requestLocationPermission()) runAutoWeather(false);
+        },
+      },
+    ]);
+  };
+
+  const pickWeather = (option: Weather) => {
+    userChoseWeather.current = true;
+    setWeatherAuto(false);
+    setWeather(weather === option ? null : option);
+  };
+
+  const context: OutfitContext = useMemo(
+    () => ({ occasion, weather, anchorItemId: anchor || null }),
+    [occasion, weather, anchor],
+  );
+
+  const outfitsQuery = useOutfits(context);
   const purchasesQuery = usePurchases();
-  const regenerate = useRegenerateOutfits();
+  const regenerate = useRegenerateOutfits(context);
   const { data: wardrobeItems } = useItems('wardrobe');
   const { data: wishlistEntries } = useWishlist();
+  const { data: votes } = useOutfitVotes();
+  const { data: savedOutfits } = useSavedOutfits();
 
   const itemsById = useMemo(() => {
     const map = new Map<string, Item>();
@@ -153,6 +268,12 @@ export default function DiscoverScreen() {
     return map;
   }, [wardrobeItems, wishlistEntries]);
 
+  const savedKeys = useMemo(
+    () => new Set((savedOutfits ?? []).map((o) => outfitItemsKey(o.item_ids))),
+    [savedOutfits],
+  );
+
+  const anchorItem = anchor ? itemsById.get(anchor) : undefined;
   const notEnough = outfitsQuery.error instanceof NotEnoughItems;
   const outfits = outfitsQuery.data?.outfits ?? [];
 
@@ -165,7 +286,76 @@ export default function DiscoverScreen() {
         <Text className="font-serif text-[26px] text-ink">{t('discover.title')}</Text>
       </View>
 
-      <View className="mt-2 flex-row items-center justify-between px-6">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="max-h-[38px]"
+        contentContainerClassName="items-center gap-2 px-6"
+      >
+        {OCCASIONS.map((option) => (
+          <Chip
+            key={option}
+            label={t(`discover.occasions.${option}`)}
+            selected={occasion === option}
+            onPress={() => setOccasion(occasion === option ? null : option)}
+          />
+        ))}
+      </ScrollView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="mt-2 max-h-[38px]"
+        contentContainerClassName="items-center gap-2 px-6"
+      >
+        <Pressable
+          accessibilityRole="button"
+          onPress={onAutoWeatherPress}
+          className={`flex-row items-center gap-1.5 rounded-full px-4 py-2 ${
+            weatherAuto ? 'bg-dark' : 'border border-field bg-bright'
+          }`}
+        >
+          {detecting ? (
+            <ActivityIndicator size="small" color={weatherAuto ? colors.bright : colors.soft} />
+          ) : (
+            <LocationIcon size={13} color={weatherAuto ? colors.bright : colors.soft} />
+          )}
+          <Text
+            className={
+              weatherAuto ? 'font-sansmed text-[13px] text-bright' : 'font-sans text-[13px] text-soft'
+            }
+          >
+            {t('discover.weatherAuto')}
+          </Text>
+        </Pressable>
+        {WEATHERS.map((option) => (
+          <Chip
+            key={option}
+            label={t(`discover.weathers.${option}`)}
+            selected={weather === option}
+            onPress={() => pickWeather(option)}
+          />
+        ))}
+      </ScrollView>
+
+      {anchorItem ? (
+        <View className="mt-3 flex-row items-center gap-2 px-6">
+          <View className="flex-row items-center gap-2 rounded-full border border-strong bg-card px-3.5 py-2">
+            <HangerIcon size={14} color={colors.ink} strokeWidth={1.5} />
+            <Text className="font-sansmed text-[12.5px] text-ink" numberOfLines={1}>
+              {t('discover.anchoredTo', { title: anchorItem.title ?? '' })}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => router.setParams({ anchor: undefined })}
+            >
+              <CloseIcon size={14} color={colors.muted} />
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+      <View className="mt-3 flex-row items-center justify-between px-6">
         <Text className="font-serif text-[20px] text-ink">{t('discover.forYou')}</Text>
         <Pressable
           accessibilityRole="button"
@@ -205,9 +395,19 @@ export default function DiscoverScreen() {
           contentContainerClassName="gap-4 px-6"
           contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
         >
-          {outfits.map((outfit, index) => (
-            <OutfitCard key={index} outfit={outfit} itemsById={itemsById} />
-          ))}
+          {outfits.map((outfit, index) => {
+            const key = outfitItemsKey(outfit.item_ids);
+            return (
+              <OutfitCard
+                key={`${key}-${index}`}
+                outfit={outfit}
+                itemsById={itemsById}
+                requestedOccasion={occasion}
+                vote={votes?.get(key) ?? null}
+                saved={savedKeys.has(key)}
+              />
+            );
+          })}
 
           {(purchasesQuery.data?.suggestions.length ?? 0) > 0 ? (
             <View className="mt-3">

@@ -53,6 +53,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'expo-localization',
+    [
+      'expo-location',
+      {
+        // Coarse location, used only to fetch local weather for outfit
+        // suggestions; the app shows its own explainer before this prompt.
+        locationWhenInUsePermission:
+          'Your location is used only to fetch the local weather for outfit suggestions. This is optional.',
+      },
+    ],
     'expo-secure-store',
     'expo-web-browser',
     'expo-apple-authentication',

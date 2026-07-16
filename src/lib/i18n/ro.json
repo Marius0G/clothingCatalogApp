@@ -74,6 +74,8 @@
     "szTops": "Sus",
     "szBottoms": "Jos",
     "szShoes": "Încălț.",
+    "noGo": "Ce nu porți niciodată",
+    "noGoPh": "ex. tocuri, fuste, culori stridente",
     "anything": "Altceva ce ar trebui să știm?",
     "anythingPh": "ex. prefer croieli lejere și materiale naturale.",
     "savePrefs": "Salvează preferințele"
@@ -121,6 +123,26 @@
     "title": "Descoperă",
     "forYou": "Ținute pentru tine",
     "regenerate": "Regenerează",
+    "occasions": {
+      "everyday": "Zi de zi",
+      "office": "Birou",
+      "evening": "Seară în oraș",
+      "sport": "Sport",
+      "event": "Eveniment",
+      "travel": "Călătorie"
+    },
+    "weathers": {
+      "hot": "Cald",
+      "mild": "Plăcut",
+      "cool": "Răcoros",
+      "cold": "Frig"
+    },
+    "weatherAuto": "Auto",
+    "locationTitle": "Folosim locația ta?",
+    "locationBody": "O folosim doar ca să aflăm vremea locală pentru sugestiile de ținute — nimic altceva. E opțional; poți alege vremea oricând manual.",
+    "saveOutfit": "Salvează",
+    "savedOutfit": "Salvată",
+    "anchoredTo": "În jurul piesei: {{title}}",
     "whyThis": "De ce funcționează",
     "generating": "Stilistul AI îți compune ținutele…",
     "generationError": "Nu am putut genera ținute acum. Încearcă din nou în câteva minute.",
@@ -129,6 +151,14 @@
     "shop": "Cumpără",
     "emptyTitle": "Adaugă întâi câteva piese",
     "emptySub": "Când garderoba are articole, începem să-ți construim ținute."
+  },
+  "outfits": {
+    "title": "Ținute salvate",
+    "emptyTitle": "Nicio ținută salvată încă",
+    "emptySub": "Salvează ținutele care îți plac din Descoperă și le găsești aici.",
+    "woreIt": "Am purtat-o",
+    "deleteTitle": "Ștergi această ținută?",
+    "discoverMore": "Descoperă ținute noi"
   },
   "addItem": {
     "title": "Adaugă o piesă",
@@ -168,6 +198,10 @@
     "priceHistory": "Istoric preț",
     "openLink": "Deschide în magazin",
     "aiTagged": "Etichete sugerate de AI · editabile",
+    "woreIt": "Am purtat-o azi",
+    "wornTimes": "Purtată de {{n}} ori",
+    "retag": "Rulează din nou etichetarea AI",
+    "styleThis": "Creează o ținută cu ea",
     "delete": "Șterge piesa",
     "deleteTitle": "Ștergi piesa?",
     "deleteBody": "Se șterge și din toate colecțiile.",

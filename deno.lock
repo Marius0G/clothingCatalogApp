@@ -2,6 +2,7 @@
   "version": "4",
   "specifiers": {
     "jsr:@std/assert@*": "1.0.19",
+    "jsr:@std/encoding@*": "1.0.11",
     "jsr:@std/internal@^1.0.12": "1.0.14"
   },
   "jsr": {
@@ -10,6 +11,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/encoding@1.0.11": {
+      "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
     },
     "@std/internal@1.0.14": {
       "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
@@ -29,15 +33,18 @@
         "npm:@supabase/supabase-js@^2.110.6",
         "npm:@tanstack/react-query@^5.101.2",
         "npm:@types/aes-js@^3.1.4",
+        "npm:@types/node@^26.1.1",
         "npm:@types/react@~19.2.2",
         "npm:aes-js@^3.1.2",
         "npm:deno-bin@^2.2.7",
+        "npm:eas-cli@^21.0.1",
         "npm:eslint-config-expo@57.0",
         "npm:eslint@^9.39.5",
         "npm:expo-apple-authentication@~57.0.1",
         "npm:expo-constants@~57.0.5",
         "npm:expo-dev-client@~57.0.6",
         "npm:expo-device@~57.0.1",
+        "npm:expo-file-system@~57.0.1",
         "npm:expo-font@~57.0.1",
         "npm:expo-glass-effect@~57.0.1",
         "npm:expo-image-manipulator@~57.0.4",
@@ -49,6 +56,7 @@
         "npm:expo-notifications@~57.0.5",
         "npm:expo-router@~57.0.6",
         "npm:expo-secure-store@~57.0.1",
+        "npm:expo-share-intent@^8.0.1",
         "npm:expo-splash-screen@~57.0.4",
         "npm:expo-status-bar@~57.0.1",
         "npm:expo-symbols@~57.0.1",

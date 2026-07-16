@@ -1,4 +1,4 @@
-import { ItemCategorySchema } from '@shared/types';
+import { ItemCategorySchema, type ItemTags } from '@shared/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -38,6 +38,11 @@ type Stage =
 
 type AiState = 'pending' | 'done' | 'failed';
 
+type AiAttrs = Pick<
+  ItemTags,
+  'pattern' | 'material' | 'fit' | 'formality' | 'warmth' | 'seasons' | 'occasions' | 'layer'
+>;
+
 function splitTags(text: string): string[] {
   return text
     .split(',')
@@ -64,6 +69,9 @@ export default function AddItemScreen() {
   const [styleTags, setStyleTags] = useState('');
   const [notes, setNotes] = useState('');
   const [aiState, setAiState] = useState<AiState>('pending');
+  // v2 structured attributes: applied silently on save (no editing UI yet;
+  // the item screen's re-tag refreshes them).
+  const [aiAttrs, setAiAttrs] = useState<AiAttrs | null>(null);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [showCollections, setShowCollections] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -83,6 +91,7 @@ export default function AddItemScreen() {
     setSubcategory('');
     setItemColors('');
     setStyleTags('');
+    setAiAttrs(null);
     setAiState('pending');
     const run = ++tagRunRef.current;
     suggestTags(prepared.base64).then((tags) => {
@@ -99,6 +108,16 @@ export default function AddItemScreen() {
       setSubcategory(tags.subcategory);
       setItemColors(tags.colors.join(', '));
       setStyleTags(tags.style_tags.join(', '));
+      setAiAttrs({
+        pattern: tags.pattern,
+        material: tags.material,
+        fit: tags.fit,
+        formality: tags.formality,
+        warmth: tags.warmth,
+        seasons: tags.seasons,
+        occasions: tags.occasions,
+        layer: tags.layer,
+      });
       setAiState('done');
     });
 
@@ -122,6 +141,7 @@ export default function AddItemScreen() {
         style_tags: splitTags(styleTags),
         notes: notes.trim() || null,
         ai_tagged: aiState === 'done',
+        ...(aiAttrs ?? {}),
       });
       const userId = session.user.id;
       const originalPath = await uploadItemImage(userId, item.id, stage.originalUri, 'original', false);

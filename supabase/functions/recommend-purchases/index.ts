@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
   const { data: items } = await admin
     .from('items')
-    .select('title, category, subcategory, colors, style_tags, brand')
+    .select('title, category, subcategory, colors, style_tags, brand, formality, material, occasions')
     .eq('user_id', userId);
   if (!items || items.length < MIN_WARDROBE_ITEMS) {
     return jsonResponse({ error: 'not enough items', min_items: MIN_WARDROBE_ITEMS }, 422);

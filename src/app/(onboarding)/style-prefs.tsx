@@ -53,6 +53,7 @@ export default function StylePrefsScreen() {
   const [sizeTop, setSizeTop] = useState('');
   const [sizeBottom, setSizeBottom] = useState('');
   const [sizeShoe, setSizeShoe] = useState('');
+  const [noGo, setNoGo] = useState('');
   const [freeText, setFreeText] = useState('');
   const [error, setError] = useState(false);
 
@@ -86,6 +87,7 @@ export default function StylePrefsScreen() {
     try {
       await updateProfile.mutateAsync({
         style_preferences: parts.length ? parts.join(' ') : null,
+        no_go: noGo.trim() || null,
         sizes,
         onboarded_at: new Date().toISOString(),
       });
@@ -240,6 +242,15 @@ export default function StylePrefsScreen() {
             </View>
           ))}
         </View>
+
+        <SectionLabel optional>{t('onboarding.noGo')}</SectionLabel>
+        <TextInput
+          placeholder={t('onboarding.noGoPh')}
+          placeholderTextColor={themeColors.faint}
+          value={noGo}
+          onChangeText={setNoGo}
+          className="rounded-xl border border-strong bg-bright p-3.5 font-sans text-[13.5px] text-ink"
+        />
 
         <SectionLabel optional>{t('onboarding.anything')}</SectionLabel>
         <TextInput

@@ -74,6 +74,15 @@ export function BookmarkIcon({ size = 17, color = defaults.color, strokeWidth = 
   );
 }
 
+export function LocationIcon({ size = 22, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M12 21s-6.5-5.6-6.5-10.4a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z" />
+      <Circle cx="12" cy="10.4" r="2.3" />
+    </Svg>
+  );
+}
+
 export function SearchIcon({ size = 22, color = defaults.color, strokeWidth = 1.7 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>

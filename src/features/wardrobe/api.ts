@@ -39,6 +39,15 @@ export type NewPhotoItem = {
   style_tags?: string[];
   notes?: string | null;
   ai_tagged?: boolean;
+  // v2 attributes (AI-extracted; see ItemTags)
+  pattern?: Item['pattern'];
+  material?: Item['material'];
+  fit?: Item['fit'];
+  formality?: number | null;
+  warmth?: number | null;
+  seasons?: string[];
+  occasions?: string[];
+  layer?: Item['layer'];
 };
 
 export async function createPhotoItem(userId: string, input: NewPhotoItem): Promise<Item> {

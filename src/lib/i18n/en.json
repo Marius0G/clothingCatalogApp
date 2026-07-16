@@ -74,6 +74,8 @@
     "szTops": "Tops",
     "szBottoms": "Bottoms",
     "szShoes": "Shoes",
+    "noGo": "Things you never wear",
+    "noGoPh": "e.g. heels, skirts, bright colors",
     "anything": "Anything else we should know?",
     "anythingPh": "e.g. I prefer relaxed fits and natural fabrics.",
     "savePrefs": "Save preferences"
@@ -121,6 +123,26 @@
     "title": "Discover",
     "forYou": "Outfits for you",
     "regenerate": "Regenerate",
+    "occasions": {
+      "everyday": "Everyday",
+      "office": "Office",
+      "evening": "Evening out",
+      "sport": "Sport",
+      "event": "Event",
+      "travel": "Travel"
+    },
+    "weathers": {
+      "hot": "Hot",
+      "mild": "Mild",
+      "cool": "Cool",
+      "cold": "Cold"
+    },
+    "weatherAuto": "Auto",
+    "locationTitle": "Use your location?",
+    "locationBody": "It's used only to fetch the local weather for outfit suggestions — nothing else. This is optional; you can always pick the weather manually.",
+    "saveOutfit": "Save",
+    "savedOutfit": "Saved",
+    "anchoredTo": "Around: {{title}}",
     "whyThis": "Why this works",
     "generating": "Your AI stylist is composing outfits…",
     "generationError": "Couldn't generate outfits right now. Try again in a few minutes.",
@@ -129,6 +151,14 @@
     "shop": "Shop",
     "emptyTitle": "Add a few pieces first",
     "emptySub": "Once your wardrobe has items, we start building outfits for you."
+  },
+  "outfits": {
+    "title": "Saved outfits",
+    "emptyTitle": "No saved outfits yet",
+    "emptySub": "Save looks you like from Discover and they'll live here.",
+    "woreIt": "Wore it",
+    "deleteTitle": "Delete this outfit?",
+    "discoverMore": "Discover new outfits"
   },
   "addItem": {
     "title": "Add an item",
@@ -168,6 +198,10 @@
     "priceHistory": "Price history",
     "openLink": "Open in store",
     "aiTagged": "AI-suggested tags · editable",
+    "woreIt": "I wore this today",
+    "wornTimes": "Worn {{n}} times",
+    "retag": "Re-run AI tagging",
+    "styleThis": "Style this piece",
     "delete": "Delete piece",
     "deleteTitle": "Delete this piece?",
     "deleteBody": "It will be removed from all collections too.",
