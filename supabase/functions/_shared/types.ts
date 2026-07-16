@@ -97,10 +97,13 @@ export type Collection = z.infer<typeof CollectionSchema>;
 
 /** Contract for the tag-item edge function (vision auto-tagging, M1). */
 export const ItemTagsSchema = z.object({
+  title: z.string().max(80),
+  brand: z.string().max(60).nullable(),
   category: ItemCategorySchema,
   subcategory: z.string(),
   colors: z.array(z.string()).max(4),
   style_tags: z.array(z.string()).max(6),
+  description: z.string().max(400),
 });
 export type ItemTags = z.infer<typeof ItemTagsSchema>;
 

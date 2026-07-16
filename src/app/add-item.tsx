@@ -1,6 +1,7 @@
+import { ItemCategorySchema } from '@shared/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,11 +14,12 @@ import {
   SparkleIcon,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { Chip } from '@/components/ui/chip';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/features/auth/provider';
 import { addItemToCollection } from '@/features/collections/api';
 import { useCollections } from '@/features/collections/hooks';
-import { uploadItemImage } from '@/features/wardrobe/api';
+import { suggestTags, uploadItemImage } from '@/features/wardrobe/api';
 import {
   useCreatePhotoItem,
   useRequestAutoTags,
@@ -27,10 +29,21 @@ import { tryRemoveBackground } from '@/lib/background-removal';
 import { pickFromCamera, pickFromGallery, prepareForUpload, type PickedImage } from '@/lib/images';
 import { colors } from '@/lib/theme';
 
+const CATEGORIES = ItemCategorySchema.options;
+
 type Stage =
   | { kind: 'pick' }
   | { kind: 'processing'; originalUri: string }
   | { kind: 'preview'; originalUri: string; cutoutUri: string | null };
+
+type AiState = 'pending' | 'done' | 'failed';
+
+function splitTags(text: string): string[] {
+  return text
+    .split(',')
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+}
 
 export default function AddItemScreen() {
   const { t } = useTranslation();
@@ -44,20 +57,54 @@ export default function AddItemScreen() {
   const [stage, setStage] = useState<Stage>({ kind: 'pick' });
   const [useCutout, setUseCutout] = useState(true);
   const [title, setTitle] = useState('');
+  const [brand, setBrand] = useState('');
+  const [category, setCategory] = useState<(typeof CATEGORIES)[number] | null>(null);
+  const [subcategory, setSubcategory] = useState('');
+  const [itemColors, setItemColors] = useState('');
+  const [styleTags, setStyleTags] = useState('');
+  const [notes, setNotes] = useState('');
+  const [aiState, setAiState] = useState<AiState>('pending');
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [showCollections, setShowCollections] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  // Guards against a slow AI response landing after the user retook the photo.
+  const tagRunRef = useRef(0);
 
   const userCollections = (collections ?? []).filter((c) => !c.is_system);
 
   const startWith = async (picked: PickedImage | null) => {
     if (!picked) return;
     const prepared = await prepareForUpload(picked);
-    setStage({ kind: 'processing', originalUri: prepared });
-    const cutoutUri = await tryRemoveBackground(prepared);
+    setStage({ kind: 'processing', originalUri: prepared.uri });
+
+    // New photo → the previous photo's AI suggestions no longer apply.
+    setCategory(null);
+    setSubcategory('');
+    setItemColors('');
+    setStyleTags('');
+    setAiState('pending');
+    const run = ++tagRunRef.current;
+    suggestTags(prepared.base64).then((tags) => {
+      if (run !== tagRunRef.current) return;
+      if (!tags) {
+        setAiState('failed');
+        return;
+      }
+      // Free-text fields the user may have typed in meanwhile: fill only if empty.
+      setTitle((current) => current.trim() ? current : tags.title);
+      setBrand((current) => current.trim() ? current : (tags.brand ?? ''));
+      setNotes((current) => current.trim() ? current : tags.description);
+      setCategory(tags.category);
+      setSubcategory(tags.subcategory);
+      setItemColors(tags.colors.join(', '));
+      setStyleTags(tags.style_tags.join(', '));
+      setAiState('done');
+    });
+
+    const cutoutUri = await tryRemoveBackground(prepared.uri);
     setUseCutout(!!cutoutUri);
-    setStage({ kind: 'preview', originalUri: prepared, cutoutUri });
+    setStage({ kind: 'preview', originalUri: prepared.uri, cutoutUri });
   };
 
   const save = async () => {
@@ -68,6 +115,13 @@ export default function AddItemScreen() {
       const item = await createItem.mutateAsync({
         title: title.trim() || null,
         status: 'wardrobe',
+        brand: brand.trim() || null,
+        category,
+        subcategory: subcategory.trim() || null,
+        colors: splitTags(itemColors),
+        style_tags: splitTags(styleTags),
+        notes: notes.trim() || null,
+        ai_tagged: aiState === 'done',
       });
       const userId = session.user.id;
       const originalPath = await uploadItemImage(userId, item.id, stage.originalUri, 'original', false);
@@ -86,7 +140,8 @@ export default function AddItemScreen() {
       await Promise.all(
         selectedCollections.map((collectionId) => addItemToCollection(collectionId, item.id)),
       );
-      requestAutoTags(item.id);
+      // AI didn't answer before save (or failed) — fall back to tagging in place.
+      if (aiState !== 'done') requestAutoTags(item.id);
       router.back();
     } catch {
       setError(true);
@@ -190,8 +245,14 @@ export default function AddItemScreen() {
             ) : null}
 
             <View className="mt-5 flex-row items-center gap-2">
-              <SparkleIcon size={14} color={colors.muted} />
-              <Text className="font-sans text-[12px] text-muted">{t('addItem.aiTagged')}</Text>
+              {aiState === 'pending' ? (
+                <ActivityIndicator size="small" color={colors.muted} />
+              ) : (
+                <SparkleIcon size={14} color={colors.muted} />
+              )}
+              <Text className="font-sans text-[12px] text-muted">
+                {aiState === 'pending' ? t('addItem.aiThinking') : t('addItem.aiTagged')}
+              </Text>
             </View>
 
             <View className="mt-3 gap-2.5">
@@ -202,6 +263,41 @@ export default function AddItemScreen() {
                 onChangeText={setTitle}
                 error={error ? t('common.error') : null}
               />
+              <TextField label={t('item.brand')} value={brand} onChangeText={setBrand} />
+
+              <View className="gap-2">
+                <Text className="text-[13px] font-sansmed text-label">{t('item.category')}</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {CATEGORIES.map((option) => (
+                    <Chip
+                      key={option}
+                      label={t(`item.categories.${option}`)}
+                      selected={category === option}
+                      onPress={() => setCategory(category === option ? null : option)}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              <TextField
+                label={t('item.subcategory')}
+                placeholder={t('item.subcategoryPlaceholder')}
+                value={subcategory}
+                onChangeText={setSubcategory}
+              />
+              <TextField
+                label={t('item.colors')}
+                placeholder={t('item.colorsPlaceholder')}
+                value={itemColors}
+                onChangeText={setItemColors}
+              />
+              <TextField
+                label={t('item.styleTags')}
+                placeholder={t('item.styleTagsPlaceholder')}
+                value={styleTags}
+                onChangeText={setStyleTags}
+              />
+              <TextField label={t('item.notes')} value={notes} onChangeText={setNotes} multiline />
 
               {userCollections.length > 0 ? (
                 <Pressable

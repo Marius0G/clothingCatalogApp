@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Text, View } from 'react-native';
 
 import * as WebBrowser from 'expo-web-browser';
 
@@ -11,6 +11,7 @@ import { AlertToggles } from '@/components/alert-toggles';
 import { HangerIcon, LinkIcon, SparkleIcon } from '@/components/icons';
 import { PriceSparkline } from '@/components/price-sparkline';
 import { Button } from '@/components/ui/button';
+import { Chip } from '@/components/ui/chip';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import {
@@ -38,32 +39,6 @@ function splitTags(text: string): string[] {
     .split(',')
     .map((tag) => tag.trim().toLowerCase())
     .filter(Boolean);
-}
-
-function Chip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      className={`rounded-full px-4 py-2 ${selected ? 'bg-dark' : 'border border-field bg-bright'}`}
-    >
-      <Text
-        className={
-          selected ? 'font-sansmed text-[13px] text-bright' : 'font-sans text-[13px] text-soft'
-        }
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
 }
 
 function ItemEditor({ item }: { item: Item }) {

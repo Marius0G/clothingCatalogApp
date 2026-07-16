@@ -1,7 +1,9 @@
 import {
   ItemSchema,
+  ItemTagsSchema,
   type Item,
   type ItemStatus,
+  type ItemTags,
   type ItemUpdate,
 } from '@shared/types';
 import { z } from 'zod';
@@ -30,6 +32,13 @@ export async function getItem(id: string): Promise<Item> {
 export type NewPhotoItem = {
   title: string | null;
   status: ItemStatus;
+  brand?: string | null;
+  category?: Item['category'];
+  subcategory?: string | null;
+  colors?: string[];
+  style_tags?: string[];
+  notes?: string | null;
+  ai_tagged?: boolean;
 };
 
 export async function createPhotoItem(userId: string, input: NewPhotoItem): Promise<Item> {
@@ -95,4 +104,17 @@ export async function requestAutoTags(itemId: string): Promise<Item | null> {
   });
   if (error) return null;
   return ItemSchema.parse(data.item);
+}
+
+/**
+ * Vision tag suggestions for a photo that isn't saved yet (add-item screen).
+ * Returns null when AI is unavailable — the caller degrades to post-save tagging.
+ */
+export async function suggestTags(imageBase64: string): Promise<ItemTags | null> {
+  const { data, error } = await supabase.functions.invoke('tag-item', {
+    body: { image_base64: imageBase64, mime: 'image/jpeg' },
+  });
+  if (error) return null;
+  const parsed = ItemTagsSchema.safeParse(data?.tags);
+  return parsed.success ? parsed.data : null;
 }

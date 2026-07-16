@@ -23,8 +23,14 @@ export async function pickFromGallery(): Promise<PickedImage | null> {
   return result.canceled ? null : result.assets[0];
 }
 
-/** Downscales to max 1200px and compresses to JPEG for upload. */
-export async function prepareForUpload(image: PickedImage): Promise<string> {
+export type PreparedImage = { uri: string; base64: string };
+
+/**
+ * Downscales to max 1200px and compresses to JPEG for upload. The base64 copy
+ * feeds the tag-item edge function so AI suggestions can run before the item
+ * (and its storage upload) exists.
+ */
+export async function prepareForUpload(image: PickedImage): Promise<PreparedImage> {
   const context = ImageManipulator.manipulate(image.uri);
   if (Math.max(image.width, image.height) > MAX_DIMENSION) {
     context.resize(
@@ -32,6 +38,6 @@ export async function prepareForUpload(image: PickedImage): Promise<string> {
     );
   }
   const rendered = await context.renderAsync();
-  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.85 });
-  return saved.uri;
+  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.85, base64: true });
+  return { uri: saved.uri, base64: saved.base64 ?? '' };
 }
