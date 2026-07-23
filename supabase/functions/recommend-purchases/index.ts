@@ -5,13 +5,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { handleOptions, jsonResponse } from '../_shared/cors.ts';
 import { AiUnavailable, chatCompletion, extractJson } from '../_shared/featherless.ts';
+import { buildPurchasePrompt } from '../_shared/prompts.ts';
 import { checkAiBudget, recordAiUsage } from '../_shared/rateLimit.ts';
 import { PurchaseRecsSchema, type PurchaseRecs } from '../_shared/types.ts';
 
 const CACHE_DAYS = 3;
 const MIN_WARDROBE_ITEMS = 3;
 const CANDIDATE_LIMIT = 80;
-const SUGGESTION_COUNT = 6;
 
 async function sha256(text: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -48,9 +48,25 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('locale, style_preferences, sex')
+    .select('locale, style_preferences, sex, no_go, preferred_styles, favorite_colors, favorite_brands')
     .eq('id', userId)
     .single();
+
+  // Structured preferences + free notes, composed into one prompt block.
+  const preferenceBlock = [
+    profile?.preferred_styles?.length
+      ? `Preferred styles: ${profile.preferred_styles.join(', ')}`
+      : '',
+    profile?.favorite_colors?.length
+      ? `Favorite colors: ${profile.favorite_colors.join(', ')}`
+      : '',
+    profile?.favorite_brands?.length
+      ? `Favorite brands: ${profile.favorite_brands.join(', ')}`
+      : '',
+    profile?.style_preferences ? `Notes: ${profile.style_preferences}` : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
 
   // SQL prefilter: active products, gender-compatible, newest first.
   let query = admin
@@ -68,9 +84,15 @@ Deno.serve(async (req) => {
 
   const inputHash = await sha256(
     JSON.stringify({
+      // v2: 20-slug style vocabulary + structured preferences (migration 0004).
+      v: 2,
       wardrobe: items.map((i) => [i.category, i.subcategory, i.colors, i.style_tags]),
       candidates: candidates.map((c) => c.id),
       preferences: profile?.style_preferences ?? '',
+      preferred_styles: profile?.preferred_styles ?? [],
+      favorite_colors: profile?.favorite_colors ?? [],
+      favorite_brands: profile?.favorite_brands ?? [],
+      no_go: profile?.no_go ?? '',
     }),
   );
 
@@ -91,27 +113,20 @@ Deno.serve(async (req) => {
   const budget = await checkAiBudget(admin, userId, 'purchase');
   if (!budget.ok) return jsonResponse({ error: budget.reason }, budget.status);
 
-  const lang = (profile?.locale ?? 'ro') === 'ro' ? 'Romanian' : 'English';
-  const prompt = [
-    `You are a personal stylist. From the candidate products below, pick the ${SUGGESTION_COUNT} that best complete this user's wardrobe — fill gaps, match their colors and style. Avoid near-duplicates of what they already own.`,
-    `Return ONLY JSON: {"suggestions":[{"catalog_product_id":"<id from candidates>","rationale":"one sentence in ${lang} explaining the match"}]}`,
-    profile?.style_preferences ? `User preferences: ${profile.style_preferences}` : '',
-    'Wardrobe summary (JSON):',
-    JSON.stringify(items),
-    'Candidate products (JSON):',
-    JSON.stringify(
-      candidates.map((c) => ({
-        id: c.id,
-        title: c.title,
-        brand: c.brand,
-        price: c.price,
-        currency: c.currency,
-        category: c.category,
-      })),
-    ),
-  ]
-    .filter(Boolean)
-    .join('\n');
+  const prompt = buildPurchasePrompt(
+    profile?.locale ?? 'ro',
+    items,
+    candidates.map((c) => ({
+      id: c.id,
+      title: c.title,
+      brand: c.brand,
+      price: c.price,
+      currency: c.currency,
+      category: c.category,
+    })),
+    preferenceBlock || null,
+    profile?.no_go ?? null,
+  );
 
   try {
     let recs: PurchaseRecs | null = null;

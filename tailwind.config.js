@@ -18,6 +18,10 @@ module.exports = {
         sand: '#e6dfd0', // soft chip / selected swatch
         seg: '#d8d4cb', // segmented control track
         circle: '#ece8e0', // empty-state circle
+        rosetint: '#f9f1ee', // Add-chooser wishlist card surface (sampled from mockup)
+        olivetint: '#f2efe8', // Add-chooser wardrobe card surface (sampled from mockup)
+        roseink: '#8a4a42', // Add-chooser wishlist icon/accent
+        oliveink: '#565633', // Add-chooser wardrobe icon/accent
         // ink scale
         ink: '#1c1b19', // primary text
         dark: '#26241f', // primary buttons, dark pill
@@ -38,6 +42,8 @@ module.exports = {
         hairline: 'rgba(28,27,25,0.07)',
         field: 'rgba(28,27,25,0.14)',
         strong: 'rgba(28,27,25,0.16)',
+        roseline: '#dfcdcd', // Add-chooser wishlist card border
+        oliveline: '#e9e6df', // Add-chooser wardrobe card border
       },
       fontFamily: {
         serif: ['PlayfairDisplay_600SemiBold'],

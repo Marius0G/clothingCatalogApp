@@ -1,4 +1,11 @@
-import { CollectionSchema, ItemSchema, type Collection, type Item } from '@shared/types';
+import {
+  CollectionSchema,
+  CollectionSummarySchema,
+  ItemSchema,
+  type Collection,
+  type CollectionSummary,
+  type Item,
+} from '@shared/types';
 import { z } from 'zod';
 
 import { supabase } from '@/lib/supabase';
@@ -13,6 +20,19 @@ export async function listCollections(userId: string): Promise<Collection[]> {
     .order('created_at');
   if (error) throw error;
   return z.array(CollectionSchema).parse(data);
+}
+
+/** Collections with cover/count/colors from the collection_summaries view. */
+export async function listCollectionSummaries(userId: string): Promise<CollectionSummary[]> {
+  const { data, error } = await supabase
+    .from('collection_summaries')
+    .select('*')
+    .eq('user_id', userId)
+    .order('is_system', { ascending: false })
+    .order('sort_order')
+    .order('created_at');
+  if (error) throw error;
+  return z.array(CollectionSummarySchema).parse(data);
 }
 
 export async function createCollection(userId: string, name: string): Promise<Collection> {

@@ -47,6 +47,15 @@ function resolveConfig(kind: 'text' | 'vision') {
   };
 }
 
+// The Featherless plan has 4 concurrency units and one VL-72B request costs
+// all 4, so overlapping vision calls (two users tagging at once) are rejected
+// instantly with "Concurrency limit exceeded". Those are worth waiting out.
+const RETRY_DELAYS_MS = [4000, 9000];
+
+function isTransient(status: number, body: string): boolean {
+  return status === 429 || status === 503 || body.includes('Concurrency limit');
+}
+
 export async function chatCompletion(
   kind: 'text' | 'vision',
   messages: ChatMessage[],
@@ -57,22 +66,29 @@ export async function chatCompletion(
     throw new AiUnavailable('AI api key not configured');
   }
 
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: opts.maxTokens ?? 512,
-      temperature: opts.temperature ?? 0.2,
-    }),
-  });
+  let res: Response;
+  for (let attempt = 0; ; attempt++) {
+    res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_tokens: opts.maxTokens ?? 512,
+        temperature: opts.temperature ?? 0.2,
+      }),
+    });
+    if (res.ok) break;
 
-  if (!res.ok) {
     const body = await res.text().catch(() => '');
+    if (attempt < RETRY_DELAYS_MS.length && isTransient(res.status, body)) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+      continue;
+    }
+    console.error(`AI provider ${res.status} after ${attempt + 1} attempt(s): ${body.slice(0, 300)}`);
     throw new AiUnavailable(`AI provider ${res.status}: ${body.slice(0, 300)}`);
   }
 

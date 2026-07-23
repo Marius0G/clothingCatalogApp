@@ -1,7 +1,10 @@
-import type { Outfit } from '@shared/types';
+import type { Item, Outfit } from '@shared/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/features/auth/provider';
+import { useItems } from '@/features/wardrobe/hooks';
+import { useWishlist } from '@/features/wishlist/hooks';
 
 import {
   deleteOutfit,
@@ -16,6 +19,21 @@ import {
 
 export { outfitItemsKey };
 export type { OutfitVote };
+
+/** Every item an outfit can reference (wardrobe + wishlist), keyed by id. */
+export function useItemLookup(): Map<string, Item> {
+  const { data: wardrobeItems } = useItems('wardrobe');
+  const { data: wishlistEntries } = useWishlist();
+  return useMemo(() => {
+    const map = new Map<string, Item>();
+    for (const item of wardrobeItems ?? []) map.set(item.id, item);
+    for (const entry of wishlistEntries ?? []) {
+      const { tracked_product: _tp, ...item } = entry;
+      map.set(item.id, item as Item);
+    }
+    return map;
+  }, [wardrobeItems, wishlistEntries]);
+}
 
 export function useSavedOutfits() {
   const { session } = useAuth();

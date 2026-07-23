@@ -3,6 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "types": ["node"],
+    // shared/prompts.ts re-exports Deno code that imports './types.ts' with an
+    // explicit extension (Deno requires it); noEmit is set by the Expo base.
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": [
         "./src/*"

@@ -11,7 +11,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="wishlist" />
       <Tabs.Screen name="wardrobe" />
-      <Tabs.Screen name="settings" />
+      <Tabs.Screen name="you" />
     </Tabs>
   );
 }

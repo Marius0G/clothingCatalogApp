@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
  */
 export async function registerPushToken(userId: string): Promise<void> {
   try {
+    if (Platform.OS === 'web') return; // Expo push tokens are native-only
     if (!Device.isDevice && Platform.OS === 'ios') return;
 
     if (Platform.OS === 'android') {

@@ -1,4 +1,5 @@
 import { ItemCategorySchema, type ItemTags } from '@shared/types';
+import { useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -58,6 +59,7 @@ export default function AddItemScreen() {
   const updateItem = useUpdateItem();
   const requestAutoTags = useRequestAutoTags();
   const { data: collections } = useCollections();
+  const queryClient = useQueryClient();
 
   const [stage, setStage] = useState<Stage>({ kind: 'pick' });
   const [useCutout, setUseCutout] = useState(true);
@@ -76,6 +78,9 @@ export default function AddItemScreen() {
   const [showCollections, setShowCollections] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  // On web the modal can be the first page loaded (direct URL), so there may
+  // be no history to go back to.
+  const close = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
   // Guards against a slow AI response landing after the user retook the photo.
   const tagRunRef = useRef(0);
 
@@ -94,7 +99,7 @@ export default function AddItemScreen() {
     setAiAttrs(null);
     setAiState('pending');
     const run = ++tagRunRef.current;
-    suggestTags(prepared.base64).then((tags) => {
+    suggestTags(prepared).then((tags) => {
       if (run !== tagRunRef.current) return;
       if (!tags) {
         setAiState('failed');
@@ -160,9 +165,13 @@ export default function AddItemScreen() {
       await Promise.all(
         selectedCollections.map((collectionId) => addItemToCollection(collectionId, item.id)),
       );
+      if (selectedCollections.length) {
+        queryClient.invalidateQueries({ queryKey: ['collection-items'] });
+        queryClient.invalidateQueries({ queryKey: ['collection-summaries'] });
+      }
       // AI didn't answer before save (or failed) — fall back to tagging in place.
       if (aiState !== 'done') requestAutoTags(item.id);
-      router.back();
+      close();
     } catch {
       setError(true);
       setSaving(false);
@@ -175,7 +184,7 @@ export default function AddItemScreen() {
         className="flex-row items-center justify-between px-6 pb-2.5"
         style={{ paddingTop: insets.top + 14 }}
       >
-        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.back()}>
+        <Pressable accessibilityRole="button" hitSlop={8} onPress={close}>
           <CloseIcon size={22} color={colors.ink} />
         </Pressable>
         <Text className="font-serif text-[20px] text-ink">{t('addItem.title')}</Text>

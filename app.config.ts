@@ -80,6 +80,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         androidIntentFilters: ['text/*'],
       },
     ],
+    // On-device AI (Gemma 4 via llama.cpp). Defaults also add the iOS
+    // increased-memory entitlements on production builds — required there for
+    // multi-GB models when iOS support lands.
+    'llama.rn',
     './plugins/withMlkitManifestFix',
   ],
   experiments: {

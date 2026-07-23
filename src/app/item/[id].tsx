@@ -136,7 +136,12 @@ function ItemEditor({ item }: { item: Item }) {
             variant="secondary"
             label={t('item.styleThis')}
             icon={<SparkleIcon size={16} color={colors.ink} />}
-            onPress={() => router.push({ pathname: '/discover', params: { anchor: item.id } })}
+            onPress={() =>
+              router.navigate({
+                pathname: '/wardrobe',
+                params: { view: 'outfits', anchor: item.id },
+              })
+            }
           />
           {item.image_path ? (
             <Button

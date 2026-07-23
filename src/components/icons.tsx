@@ -235,3 +235,92 @@ export function MailIcon({ size = 18, color = colors.bright, strokeWidth = 1.6 }
     </Svg>
   );
 }
+
+export function PersonIcon({ size = defaults.size, color = defaults.color, strokeWidth = 1.6, filled }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={filled ? 'none' : color} strokeWidth={strokeWidth}>
+      <Circle cx="12" cy="7.5" r="3.8" />
+      <Path d="M4.5 20.5a7.5 7.5 0 0 1 15 0z" />
+    </Svg>
+  );
+}
+
+export function FolderIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M3 7.5V6a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </Svg>
+  );
+}
+
+export function SlidersIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M4 8h9M17.5 8H20M4 16h3.5M12 16h8" />
+      <Circle cx="15.2" cy="8" r="2.2" />
+      <Circle cx="9.8" cy="16" r="2.2" />
+    </Svg>
+  );
+}
+
+export function ChatBubbleIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M21 11.5a8 8 0 0 1-8.5 8 8.6 8.6 0 0 1-3.5-.7L3 20l1.2-5.4A8 8 0 1 1 21 11.5z" />
+      <Path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" strokeWidth={2.2} />
+    </Svg>
+  );
+}
+
+export function BookIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M12 6.5C10.5 4.9 8.4 4 5.5 4H3v15h2.8c2.7 0 4.8.8 6.2 2.3 1.4-1.5 3.5-2.3 6.2-2.3H21V4h-2.5c-2.9 0-5 .9-6.5 2.5z" />
+      <Path d="M12 6.5v14.5" />
+    </Svg>
+  );
+}
+
+export function LockIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M6 10.5h12a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 18 20.5H6A1.5 1.5 0 0 1 4.5 19v-7A1.5 1.5 0 0 1 6 10.5z" />
+      <Path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7M12 14.5v2" />
+    </Svg>
+  );
+}
+
+export function CrownIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M4 18h16M4 18L2.8 8.2l4.7 3.3L12 5l4.5 6.5 4.7-3.3L20 18" />
+    </Svg>
+  );
+}
+
+export function GlobeIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Circle cx="12" cy="12" r="9" />
+      <Path d="M3 12h18M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18" />
+    </Svg>
+  );
+}
+
+export function DownloadIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5" />
+      <Path d="M4.5 17.5v1A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-1" />
+    </Svg>
+  );
+}
+
+export function DocIcon({ size = 18, color = defaults.color, strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+      <Path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z" />
+      <Path d="M14 3v5h5M9 12.5h6M9 16h6" />
+    </Svg>
+  );
+}

@@ -6,8 +6,8 @@ import {
   HangerIcon,
   HeartIcon,
   HomeIcon,
+  PersonIcon,
   PlusIcon,
-  SettingsIcon,
   type IconProps,
 } from '@/components/icons';
 import { colors } from '@/lib/theme';
@@ -16,7 +16,7 @@ const TAB_ICONS: Record<string, (props: IconProps) => React.JSX.Element> = {
   index: HomeIcon,
   wishlist: HeartIcon,
   wardrobe: HangerIcon,
-  settings: SettingsIcon,
+  you: PersonIcon,
 };
 
 const INACTIVE = 'rgba(251,249,245,0.55)';
@@ -92,13 +92,13 @@ export function EditorialTabBar({ state, navigation }: TabBarProps) {
         {renderTab('wishlist')}
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/add-item')}
+          onPress={() => router.push('/add-chooser')}
           className="h-10 w-10 items-center justify-center rounded-full bg-bright active:opacity-90"
         >
           <PlusIcon size={20} color={colors.dark} strokeWidth={2} />
         </Pressable>
         {renderTab('wardrobe')}
-        {renderTab('settings')}
+        {renderTab('you')}
       </View>
     </View>
   );

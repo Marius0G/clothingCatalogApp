@@ -1,17 +1,22 @@
-import { ItemCategorySchema, type ItemCategory } from '@shared/types';
-import { FlashList } from '@shopify/flash-list';
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { ItemCategorySchema, type Item, type ItemCategory } from '@shared/types';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CameraIcon, HangerIcon, SearchIcon } from '@/components/icons';
-import { ItemCard } from '@/components/item-card';
-import { EmptyState } from '@/components/ui/empty-state';
+import { HangerIcon, SearchIcon, SparkleIcon } from '@/components/icons';
+import { Chip } from '@/components/ui/chip';
+import { SegmentedIconPill } from '@/components/ui/segmented-icon-pill';
 import { TextField } from '@/components/ui/text-field';
+import { ClothesView } from '@/components/wardrobe/clothes-view';
+import { OutfitsView } from '@/components/wardrobe/outfits-view';
+import { WeatherChip } from '@/components/weather-chip';
+import { useRecordWear } from '@/features/outfits/hooks';
+import { OCCASIONS, useOutfitContext } from '@/features/recs/use-outfit-context';
 import { useItems } from '@/features/wardrobe/hooks';
 import { colors } from '@/lib/theme';
+import { useUiStore, type WardrobeView } from '@/lib/ui-store';
 
 const CATEGORIES = ItemCategorySchema.options;
 
@@ -20,9 +25,49 @@ export default function WardrobeScreen() {
   const insets = useSafeAreaInsets();
   const { data: items, isPending } = useItems('wardrobe');
 
+  const hydrated = useUiStore((state) => state.hydrated);
+  const view = useUiStore((state) => state.wardrobeView);
+  const setView = useUiStore((state) => state.setWardrobeView);
+
   const [filter, setFilter] = useState<ItemCategory | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
+
+  // Outfit generation context lives here, above both views, so occasion /
+  // weather / anchor — and the useOutfits cache key — survive view switches.
+  const outfitCtx = useOutfitContext();
+  const {
+    occasion,
+    setOccasion,
+    weather,
+    weatherAuto,
+    detecting,
+    cycleWeather,
+    redetectWeather,
+    ensureAutoWeather,
+    setAnchor,
+  } = outfitCtx;
+
+  // Deep-link params are one-shot commands (the tab bar re-navigates without
+  // params but React Navigation keeps stale ones): consume, then clear.
+  const params = useLocalSearchParams<{ view?: string; anchor?: string }>();
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!params.view && !params.anchor) return;
+    if (params.view === 'outfits' || params.view === 'clothes') setView(params.view);
+    if (params.anchor) {
+      setAnchor(params.anchor);
+      setView('outfits');
+    }
+    router.setParams({ view: undefined, anchor: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- consume-once per param arrival
+  }, [hydrated, params.view, params.anchor]);
+
+  // Silent weather prefill only once the outfits view is actually shown.
+  useEffect(() => {
+    if (hydrated && view === 'outfits') ensureAutoWeather();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ensureAutoWeather self-guards to run once
+  }, [hydrated, view]);
 
   const presentCategories = useMemo(
     () => CATEGORIES.filter((c) => items?.some((i) => i.category === c)),
@@ -45,20 +90,40 @@ export default function WardrobeScreen() {
 
   const empty = !isPending && items?.length === 0;
 
+  // Quick wear-log: hold a tile → record wear for that single item.
+  const recordWear = useRecordWear();
+  const [justWornId, setJustWornId] = useState<string | null>(null);
+  const justWornTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logWear = (item: Item) => {
+    recordWear.mutate([item.id]);
+    Vibration.vibrate(30);
+    setJustWornId(item.id);
+    if (justWornTimer.current) clearTimeout(justWornTimer.current);
+    justWornTimer.current = setTimeout(() => setJustWornId(null), 1400);
+  };
+  useEffect(
+    () => () => {
+      if (justWornTimer.current) clearTimeout(justWornTimer.current);
+    },
+    [],
+  );
+
   return (
     <View className="flex-1 bg-paper" style={{ paddingTop: insets.top + 18 }}>
       <View className="flex-row items-center justify-between px-6">
         <Text className="font-serif text-[30px] text-ink">{t('wardrobe.title')}</Text>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={() => setSearchOpen((open) => !open)}
-        >
-          <SearchIcon size={22} color={colors.ink} />
-        </Pressable>
+        {view === 'clothes' ? (
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => setSearchOpen((open) => !open)}
+          >
+            <SearchIcon size={22} color={colors.ink} />
+          </Pressable>
+        ) : null}
       </View>
 
-      {searchOpen ? (
+      {searchOpen && view === 'clothes' ? (
         <View className="mt-3 px-6">
           <TextField
             placeholder={t('wardrobe.searchPh')}
@@ -69,69 +134,73 @@ export default function WardrobeScreen() {
         </View>
       ) : null}
 
-      {empty ? (
-        <EmptyState
-          icon={<HangerIcon size={42} color={colors.iconmuted} strokeWidth={1.4} />}
-          title={t('wardrobe.emptyTitle')}
-          body={t('wardrobe.emptySub')}
-          ctaLabel={t('wardrobe.emptyCta')}
-          ctaIcon={<CameraIcon size={18} color={colors.bright} />}
-          onPressCta={() => router.push('/add-item')}
+      {/* Single control row: view pill pinned left, contextual chips scroll beside it. */}
+      <View className="mt-4 flex-row items-center gap-2.5 pl-6">
+        <SegmentedIconPill<WardrobeView>
+          options={[
+            { key: 'clothes', icon: HangerIcon, label: t('wardrobe.viewClothes') },
+            { key: 'outfits', icon: SparkleIcon, label: t('wardrobe.viewOutfits') },
+          ]}
+          value={view}
+          onChange={setView}
         />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="max-h-[38px] flex-1"
+          contentContainerClassName="items-center gap-2 pr-6"
+        >
+          {!hydrated ? null : view === 'clothes' ? (
+            <>
+              <Chip
+                tone="card"
+                label={t('wardrobe.fAll')}
+                selected={filter === null}
+                onPress={() => setFilter(null)}
+              />
+              {presentCategories.map((category) => (
+                <Chip
+                  key={category}
+                  tone="card"
+                  label={t(`item.categories.${category}`)}
+                  selected={filter === category}
+                  onPress={() => setFilter(filter === category ? null : category)}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {OCCASIONS.map((option) => (
+                <Chip
+                  key={option}
+                  label={t(`discover.occasions.${option}`)}
+                  selected={occasion === option}
+                  onPress={() => setOccasion(occasion === option ? null : option)}
+                />
+              ))}
+              <WeatherChip
+                value={weather}
+                auto={weatherAuto}
+                detecting={detecting}
+                onCycle={cycleWeather}
+                onRedetect={redetectWeather}
+              />
+            </>
+          )}
+        </ScrollView>
+      </View>
+
+      {!hydrated ? (
+        <View className="flex-1" />
+      ) : view === 'outfits' ? (
+        <OutfitsView outfitCtx={outfitCtx} />
       ) : (
-        <>
-          <View className="mt-4 flex-row gap-2 px-6">
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setFilter(null)}
-              className={`rounded-full px-4 py-2 ${filter === null ? 'bg-dark' : 'border border-field bg-card'}`}
-            >
-              <Text
-                className={
-                  filter === null
-                    ? 'font-sansmed text-[13px] text-bright'
-                    : 'font-sans text-[13px] text-ink'
-                }
-              >
-                {t('wardrobe.fAll')}
-              </Text>
-            </Pressable>
-            {presentCategories.map((category) => (
-              <Pressable
-                key={category}
-                accessibilityRole="button"
-                onPress={() => setFilter(filter === category ? null : category)}
-                className={`rounded-full px-4 py-2 ${filter === category ? 'bg-dark' : 'border border-field bg-card'}`}
-              >
-                <Text
-                  className={
-                    filter === category
-                      ? 'font-sansmed text-[13px] text-bright'
-                      : 'font-sans text-[13px] text-ink'
-                  }
-                >
-                  {t(`item.categories.${category}`)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="mt-4 px-6 font-sans text-[12.5px] text-muted">
-            {t('wardrobe.items', { count: visible.length })}
-          </Text>
-
-          <FlashList
-            data={visible}
-            numColumns={2}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <ItemCard item={item} />}
-            contentContainerStyle={{
-              paddingHorizontal: 18,
-              paddingTop: 8,
-              paddingBottom: insets.bottom + 110,
-            }}
-          />
-        </>
+        <ClothesView
+          items={visible}
+          empty={empty}
+          onLongPressItem={logWear}
+          justWornId={justWornId}
+        />
       )}
     </View>
   );

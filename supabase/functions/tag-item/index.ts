@@ -9,46 +9,12 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { isServiceRole } from '../_shared/auth.ts';
 import { handleOptions, jsonResponse } from '../_shared/cors.ts';
 import { AiUnavailable, chatCompletion, extractJson } from '../_shared/featherless.ts';
+import { buildTagItemPrompt } from '../_shared/prompts.ts';
 import { checkAiBudget, recordAiUsage } from '../_shared/rateLimit.ts';
-import {
-  CanonicalColorSchema,
-  ItemFitSchema,
-  ItemMaterialSchema,
-  ItemPatternSchema,
-  ItemTagsSchema,
-  OccasionSchema,
-  type ItemTags,
-} from '../_shared/types.ts';
+import { ItemTagsSchema, type ItemTags } from '../_shared/types.ts';
 
-// Style tags are canonical English (engine vocabulary); UI shows them as-is.
-const STYLE_VOCAB =
-  'casual, elegant, streetwear, sporty, formal, vintage, minimalist, boho, business, party, beach, cozy';
 // ~1200px JPEG at quality 0.85 stays well under this; anything bigger is abuse.
 const MAX_BASE64_LENGTH = 6_000_000;
-
-function prompt(locale: string): string {
-  const lang = locale === 'ro' ? 'Romanian' : 'English';
-  return [
-    'You are a fashion cataloguing assistant. Look at the photo of a single clothing item and return ONLY a JSON object, no prose, with exactly these keys:',
-    `- "title": a short catalogue name for the item in ${lang}, max 6 words (e.g. "Tricou alb oversized")`,
-    '- "brand": the brand name ONLY if a logo or label is clearly identifiable in the photo, otherwise null. Never guess.',
-    '- "category": one of "top","bottom","dress","outerwear","shoes","accessory" (always these exact English values)',
-    `- "subcategory": the specific garment type (e.g. t-shirt, jeans, sneakers), in ${lang}, lowercase`,
-    `- "colors": array of 1-4 dominant colors of the garment, exactly from: ${CanonicalColorSchema.options.join(', ')}`,
-    `- "style_tags": array of 2-6 style descriptors in English, lowercase, preferring: ${STYLE_VOCAB}`,
-    `- "pattern": one of ${ItemPatternSchema.options.map((v) => `"${v}"`).join(',')}`,
-    `- "material": the main visible/likely material, one of ${ItemMaterialSchema.options.map((v) => `"${v}"`).join(',')}`,
-    `- "fit": one of ${ItemFitSchema.options.map((v) => `"${v}"`).join(',')}, or null for shoes/accessories`,
-    '- "formality": integer 1-5 (1=gym/lounge, 2=casual, 3=smart casual, 4=business, 5=formal)',
-    '- "warmth": integer 1-5 (1=hot-weather piece, 3=mid-season, 5=heavy winter)',
-    '- "seasons": array of suitable seasons from "spring","summer","autumn","winter"',
-    `- "occasions": array of 1-4 typical wearing occasions from: ${OccasionSchema.options.join(', ')}`,
-    '- "layer": how it layers on the torso — "base" (t-shirts, shirts, dresses), "mid" (sweaters, hoodies, cardigans), "outer" (jackets, coats), "none" (bottoms, shoes, accessories)',
-    `- "description": 1-2 short sentences in ${lang} describing the garment (cut, material if visible, what it pairs well with)`,
-    'All attribute values must be the exact English tokens listed above; only title, subcategory and description are localized.',
-    'Ignore the background and any person wearing the item; describe the garment itself.',
-  ].join('\n');
-}
 
 Deno.serve(async (req) => {
   const options = handleOptions(req);
@@ -136,8 +102,8 @@ Deno.serve(async (req) => {
               type: 'text',
               text:
                 attempt === 0
-                  ? prompt(profile?.locale ?? 'ro')
-                  : prompt(profile?.locale ?? 'ro') +
+                  ? buildTagItemPrompt(profile?.locale ?? 'ro')
+                  : buildTagItemPrompt(profile?.locale ?? 'ro') +
                     '\nYour previous reply was not valid JSON matching the schema. Return ONLY the JSON object.',
             },
             { type: 'image_url', image_url: { url: imageDataUrl } },

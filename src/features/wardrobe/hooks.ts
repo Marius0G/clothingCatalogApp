@@ -65,6 +65,7 @@ export function useDeleteItem() {
       queryClient.removeQueries({ queryKey: ['item', item.id] });
       queryClient.invalidateQueries({ queryKey: ['items', session?.user.id] });
       queryClient.invalidateQueries({ queryKey: ['collection-items'] });
+      queryClient.invalidateQueries({ queryKey: ['collection-summaries'] });
     },
   });
 }

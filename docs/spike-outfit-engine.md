@@ -56,7 +56,7 @@ Keep the 6-category enum; add columns (all extracted by the existing `tag-item` 
 | `layer` | enum | base, mid, outer, none (shoes/accessories) — enables layering logic |
 | `subcategory` | **canonical EN slug** (t-shirt, shirt, jeans, chinos, sneakers…) | display-localized |
 
-`style_tags` stays but from a **closed English vocabulary** (the current soft list: casual, elegant, streetwear, sporty, formal, vintage, minimalist, boho, business, party, beach, cozy). Migration + a backfill job that re-runs `tag-item` over existing items' stored photos (respecting the daily caps — batch over days or a temporary service-role bypass).
+`style_tags` stays but from a **closed English vocabulary**. Since migration 0004 this is the 20-slug list shared with user preferences (minimal, smart-casual, casual, old-money, quiet-luxury, streetwear, business, business-casual, classic, scandinavian, vintage, sporty, athleisure, y2k, grunge, preppy, boho, elegant, edgy, trendy) — see `StyleTagSchema` in `supabase/functions/_shared/types.ts`; the old 12-tag data was remapped in SQL, no AI re-tagging needed.
 
 This single change unlocks everything downstream: SQL prefiltering, deterministic scoring, cache keys per occasion, and a far denser prompt (structured JSON instead of the LLM re-guessing from a title).
 

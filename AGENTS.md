@@ -22,7 +22,7 @@ Sursa canonică: **`design/Clothing-App.dc.html`** („Editorial minimal") — o
 
 - **Tokens**: `tailwind.config.js` + `src/lib/theme.ts` (culori: paper/card/bright/ink/dark/accent/sale…; fonturi: Playfair Display pentru titluri serif, Instrument Sans pentru rest). Nu hardcoda culori/hex în componente.
 - **Iconuri**: doar `src/components/icons.tsx` (SVG-urile exacte din design, stroke subțire) — nu Ionicons/alte seturi.
-- **Structură**: tab bar = **varianta 2c-B din design (pastilă neagră plutitoare, doar iconuri, + alb central)** — `src/components/tab-bar.tsx`; tab-urile: Acasă/Favorite/[+]/Garderobă/Setări; Descoperă e ecran de stack, nu tab.
+- **Structură**: tab bar = **varianta 2c-B din design (pastilă neagră plutitoare, doar iconuri, + alb central)** — `src/components/tab-bar.tsx`; tab-urile: Acasă/Dorințe/[+]/Garderobă/Tu (You = hub de profil cu Preferences/Collections/Support/Settings ca ecrane de stack); plusul deschide chooser-ul „Add to…" (Dorințe = import prin link, Garderobă = flux foto). **Garderobă are două view-uri** (Haine / Ținute) comutate dintr-o pastilă cu iconuri + chips contextuale pe un singur rând (`?view=&anchor=` ca deep-link); generatorul de ținute e integrat în view-ul Ținute — fostele ecrane Descoperă și Ținute salvate au fost retrase (iterația din 22.07.2026). **Acasă = 6 secțiuni**: salut+statistici, „Ținuta de azi" (cu check-in de purtare, bară de 5s), carusele ținute / dorințe (badge reducere) / ultimele piese / colecții. Ecranele You/Preferences/Support/Settings/„Add to…" urmează pozele de referință din `design/references/you-tab/` (iterația din 19.07.2026, încă neadăugată în .dc.html).
 - **Litere**: titluri de ecran = `font-serif` 29-30px; secțiuni = `font-serif` 20-22px; butoane primare = fundal `dark`, radius 14, înălțime 54.
 
 ## Convenții
@@ -37,4 +37,7 @@ Sursa canonică: **`design/Clothing-App.dc.html`** („Editorial minimal") — o
 
 - `npx tsc --noEmit` și `npx expo lint` trebuie să treacă înainte de commit
 - Dev loop: emulator Android local; iOS doar prin EAS build pe iPhone fizic (Windows — nu există build local iOS)
+- Web: `npx expo start --web --port 8082` (dev) sau `npx expo export --platform web` (static). Modulele native au fork-uri `.web.ts` (auth social, share-intent)
+- Backend selection: `.env` alege cloud sau stack local (o singură secțiune activă; după schimbare, restart Metro cu `--clear`). Pentru URL-uri locale (`http://…:54321`), `src/lib/supabase.ts` rescrie host-ul automat per platformă (web → hostname-ul paginii, nativ → host-ul Metro din `hostUri`, fallback `10.0.2.2` pe emulator); pentru web prin tunel (ngrok) setează `EXPO_PUBLIC_SUPABASE_URL_WEB` la un al doilea tunel către `:54321`. La pornire, în dev, consola loghează `[supabase] <platformă> → <url>` sau un warning dacă backend-ul e de neatins
 - Migrațiile se testează local cu `npx supabase start` + `npx supabase db reset` (necesită Docker)
+- Web hosting (testare fără setup local): `npx expo export --platform web` apoi `npx eas deploy --prod` → **https://clothesapp.expo.app** (EAS Hosting, gratuit). Atenție: exportul copiază `.env`-ul activ în bundle — fă deploy DOAR cu secțiunea cloud activă

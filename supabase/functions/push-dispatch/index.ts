@@ -23,12 +23,12 @@ Deno.serve(async (req) => {
 
   const { data: pending, error } = await admin
     .from('notifications')
-    .select('id, user_id, title, body, payload')
+    .select('id, user_id, kind, title, body, payload')
     .is('sent_at', null)
     .order('created_at', { ascending: true })
     .limit(BATCH);
   if (error) return jsonResponse({ error: 'query failed' }, 500);
-  if (!pending?.length) return jsonResponse({ sent: 0, no_token: 0 });
+  if (!pending?.length) return jsonResponse({ sent: 0, no_token: 0, muted: 0 });
 
   const userIds = [...new Set(pending.map((n) => n.user_id))];
   const { data: tokens } = await admin
@@ -38,6 +38,16 @@ Deno.serve(async (req) => {
   const tokensByUser = new Map<string, string[]>();
   for (const row of tokens ?? []) {
     tokensByUser.set(row.user_id, [...(tokensByUser.get(row.user_id) ?? []), row.expo_token]);
+  }
+
+  // Per-kind opt-outs (Settings → Notifications). Absent key = enabled.
+  const { data: profiles } = await admin
+    .from('profiles')
+    .select('id, notification_prefs')
+    .in('id', userIds);
+  const prefsByUser = new Map<string, Record<string, boolean>>();
+  for (const row of profiles ?? []) {
+    prefsByUser.set(row.id, (row.notification_prefs ?? {}) as Record<string, boolean>);
   }
 
   const now = new Date().toISOString();
@@ -50,8 +60,19 @@ Deno.serve(async (req) => {
     _nid: string;
   }[] = [];
   let noToken = 0;
+  let muted = 0;
 
   for (const notification of pending) {
+    // Muted kinds are marked handled without a push; the row still shows up
+    // in the in-app notification history.
+    if (prefsByUser.get(notification.user_id)?.[notification.kind] === false) {
+      await admin
+        .from('notifications')
+        .update({ sent_at: now, receipt_status: 'muted' })
+        .eq('id', notification.id);
+      muted++;
+      continue;
+    }
     const userTokens = tokensByUser.get(notification.user_id) ?? [];
     if (userTokens.length === 0) {
       await admin
@@ -104,5 +125,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return jsonResponse({ sent, no_token: noToken, queued: pending.length });
+  return jsonResponse({ sent, no_token: noToken, muted, queued: pending.length });
 });

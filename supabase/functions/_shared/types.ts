@@ -19,14 +19,30 @@ export const SizesSchema = z
 export const SexSchema = z.enum(['male', 'female', 'other']);
 export const LocaleSchema = z.enum(['ro', 'en']);
 
+// Push opt-outs by kind; absent key = enabled (opt-out model).
+export const NotificationPrefsSchema = z
+  .object({
+    price_drop: z.boolean(),
+    restock: z.boolean(),
+  })
+  .partial();
+export type NotificationPrefs = z.infer<typeof NotificationPrefsSchema>;
+
 export const ProfileSchema = z.object({
   id: z.uuid(),
   nickname: z.string().nullable(),
   sex: SexSchema.nullable(),
   birth_year: z.number().int().min(1900).max(2100).nullable(),
   sizes: SizesSchema,
+  // Structured preferences (Preferences screen + onboarding). Styles are
+  // StyleTag slugs, colors are CanonicalColor slugs, brands are free text.
+  preferred_styles: z.array(z.string()),
+  favorite_colors: z.array(z.string()),
+  favorite_brands: z.array(z.string()),
+  // Free-form "additional style notes" (was the flattened onboarding blob).
   style_preferences: z.string().nullable(),
   no_go: z.string().nullable(),
+  notification_prefs: NotificationPrefsSchema,
   locale: LocaleSchema,
   onboarded_at: z.string().nullable(),
   created_at: z.string(),
@@ -76,6 +92,19 @@ export const ItemFitSchema = z.enum([
   'slim', 'regular', 'relaxed', 'oversized', 'straight', 'wide',
 ]);
 export const ItemLayerSchema = z.enum(['base', 'mid', 'outer', 'none']);
+export type ItemLayer = z.infer<typeof ItemLayerSchema>;
+// Canonical style vocabulary, shared by item tagging AND user preferences
+// (Preferences/onboarding chips). LLM output is mapped onto this closed set
+// (synonyms folded in, everything else dropped) so tags never drift — see
+// styleTags() below. Display labels identical in ro/en (fashion terms).
+export const StyleTagSchema = z.enum([
+  'minimal', 'smart-casual', 'casual', 'old-money', 'quiet-luxury',
+  'streetwear', 'business', 'business-casual', 'classic', 'scandinavian',
+  'vintage', 'sporty', 'athleisure', 'y2k', 'grunge', 'preppy', 'boho',
+  'elegant', 'edgy', 'trendy',
+]);
+export type StyleTag = z.infer<typeof StyleTagSchema>;
+export const STYLE_TAG_OPTIONS = StyleTagSchema.options;
 export const SeasonSchema = z.enum(['spring', 'summer', 'autumn', 'winter']);
 export type Season = z.infer<typeof SeasonSchema>;
 export const OccasionSchema = z.enum([
@@ -137,6 +166,14 @@ export const CollectionSchema = z.object({
 });
 export type Collection = z.infer<typeof CollectionSchema>;
 
+/** Row of the collection_summaries view (list screen: cover + count + colors). */
+export const CollectionSummarySchema = CollectionSchema.extend({
+  item_count: z.number().int(),
+  cover_image_path: z.string().nullable(),
+  item_colors: z.array(z.string()),
+});
+export type CollectionSummary = z.infer<typeof CollectionSummarySchema>;
+
 // ---------- AI contracts ----------
 
 /**
@@ -165,24 +202,116 @@ function lenientEnumArray<T extends z.ZodType<string>>(
   }, z.array(schema).min(1));
 }
 
+/**
+ * Non-canonical style words folded onto the vocabulary: legacy canonicals from
+ * the pre-0004 12-tag set, space variants of hyphenated slugs (LLMs write
+ * "old money", not "old-money"), and free words the model reaches for.
+ */
+const STYLE_SYNONYMS: Record<string, StyleTag> = {
+  // legacy canonical values (12-tag vocabulary, remapped in migration 0004)
+  minimalist: 'minimal', formal: 'elegant', party: 'trendy',
+  beach: 'casual', cozy: 'casual',
+  // space variants of hyphenated slugs
+  'smart casual': 'smart-casual', 'old money': 'old-money',
+  'quiet luxury': 'quiet-luxury', 'business casual': 'business-casual',
+  // free words
+  luxury: 'quiet-luxury', chic: 'elegant', classy: 'elegant',
+  sophisticated: 'elegant', glamorous: 'elegant', evening: 'elegant',
+  clean: 'minimal', simple: 'minimal',
+  smart: 'business', office: 'business',
+  graphic: 'streetwear', urban: 'streetwear', skate: 'streetwear',
+  athletic: 'sporty', sport: 'sporty', outdoor: 'sporty',
+  gym: 'athleisure', activewear: 'athleisure',
+  retro: 'vintage', bohemian: 'boho', scandi: 'scandinavian',
+  comfy: 'casual', comfortable: 'casual', relaxed: 'casual',
+  vacation: 'casual', summery: 'casual',
+  glam: 'trendy', sexy: 'trendy',
+};
+
+/**
+ * Maps raw LLM style words onto the canonical StyleTag set: lowercase, fold
+ * known synonyms, hyphenate remaining multi-word entries, drop anything still
+ * off-vocabulary. Guarantees ≥1 tag so the recommender always has something
+ * to score.
+ */
+const styleTags = z.preprocess((value) => {
+  const raw = Array.isArray(value) ? value : [value];
+  const mapped = raw
+    .map((entry) => (typeof entry === 'string' ? entry.toLowerCase().trim() : ''))
+    .map((entry) => STYLE_SYNONYMS[entry] ?? entry)
+    .map((entry) =>
+      StyleTagSchema.safeParse(entry).success ? entry : entry.replace(/\s+/g, '-'),
+    )
+    .filter((entry) => StyleTagSchema.safeParse(entry).success);
+  const unique = [...new Set(mapped)].slice(0, 6);
+  return unique.length ? unique : ['casual'];
+}, z.array(StyleTagSchema).min(1));
+
+// Subcategory words (ro + en) that mark a knit mid-layer: hoodies, sweatshirts,
+// sweaters, cardigans. Used to keep them out of `outerwear` and on layer `mid`.
+const MID_LAYER_RE = /glug|hanorac|hoodie|sweat|pulover|sweater|cardigan|hain[ăa] tricotat/i;
+// True outerwear garment words (ro + en); hoodie-family words above win over these.
+const OUTERWEAR_RE = /jacket|jachet|geac[ăa]|coat|palton|blazer|parka|bomber|trench|windbreak|gilet/i;
+// Dress words (ro + en); a "dress shirt" is a shirt, not a dress.
+const DRESS_RE = /dress(?!\s*shirt)|rochi|sarafan/i;
+
+/**
+ * Enforces category↔layer coherence so the outfit engine never sees an
+ * impossible pair (e.g. outerwear + mid). Also rescues zip/pullover hoodies &
+ * cardigans that the model files under `outerwear` back into `top`: in this
+ * taxonomy outerwear is only jackets/coats/blazers/parkas. Conversely, when a
+ * specific garment word in the subcategory ("maxi dress", "denim jacket")
+ * contradicts a generic `top` category, the subcategory wins — smaller vision
+ * models drift this way far more often than they misname the garment itself.
+ */
+function reconcileTags<T extends { category: ItemCategory; subcategory: string; layer: ItemLayer }>(
+  tags: T,
+): T {
+  let { category, layer } = tags;
+  const looksMid = MID_LAYER_RE.test(tags.subcategory);
+  if (category === 'outerwear' && looksMid) category = 'top';
+  if (category === 'top' && !looksMid) {
+    if (DRESS_RE.test(tags.subcategory)) category = 'dress';
+    else if (OUTERWEAR_RE.test(tags.subcategory)) category = 'outerwear';
+  }
+  switch (category) {
+    case 'outerwear': layer = 'outer'; break;
+    case 'dress': layer = 'base'; break;
+    case 'bottom':
+    case 'shoes':
+    case 'accessory': layer = 'none'; break;
+    case 'top': layer = looksMid || layer === 'mid' ? 'mid' : 'base'; break;
+  }
+  return { ...tags, category, layer };
+}
+
 /** Contract for the tag-item edge function (vision auto-tagging, M1 + v2 attrs). */
-export const ItemTagsSchema = z.object({
-  title: z.string().max(80),
-  brand: z.string().max(60).nullable(),
-  category: ItemCategorySchema,
-  subcategory: z.string(),
-  colors: lenientEnumArray(CanonicalColorSchema, ['multicolor'], 4),
-  style_tags: z.array(z.string()).max(6),
-  pattern: lenientEnum(ItemPatternSchema).catch('other'),
-  material: lenientEnum(ItemMaterialSchema).catch('other'),
-  fit: lenientEnum(ItemFitSchema).nullable().catch(null),
-  formality: z.coerce.number().int().min(1).max(5).catch(3),
-  warmth: z.coerce.number().int().min(1).max(5).catch(3),
-  seasons: lenientEnumArray(SeasonSchema, [...SeasonSchema.options]),
-  occasions: lenientEnumArray(OccasionSchema, ['everyday']),
-  layer: lenientEnum(ItemLayerSchema).catch('none'),
-  description: z.string().max(400),
-});
+export const ItemTagsSchema = z
+  .object({
+    title: z.string().max(80),
+    // Small models sometimes emit the literal string "null" for no-brand.
+    brand: z.preprocess(
+      (value) =>
+        typeof value === 'string' && /^(null|none|n\/a|unknown)$/i.test(value.trim())
+          ? null
+          : value,
+      z.string().max(60).nullable(),
+    ),
+    category: ItemCategorySchema,
+    subcategory: z.string(),
+    colors: lenientEnumArray(CanonicalColorSchema, ['multicolor'], 4),
+    style_tags: styleTags,
+    pattern: lenientEnum(ItemPatternSchema).catch('other'),
+    material: lenientEnum(ItemMaterialSchema).catch('other'),
+    fit: lenientEnum(ItemFitSchema).nullable().catch(null),
+    formality: z.coerce.number().int().min(1).max(5).catch(3),
+    warmth: z.coerce.number().int().min(1).max(5).catch(3),
+    seasons: lenientEnumArray(SeasonSchema, [...SeasonSchema.options]),
+    occasions: lenientEnumArray(OccasionSchema, ['everyday']),
+    layer: lenientEnum(ItemLayerSchema).catch('none'),
+    description: z.string().max(400),
+  })
+  .transform(reconcileTags);
 export type ItemTags = z.infer<typeof ItemTagsSchema>;
 
 // ---------- tracked products (M2) ----------

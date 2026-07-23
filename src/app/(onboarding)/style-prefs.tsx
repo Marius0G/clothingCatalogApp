@@ -1,3 +1,4 @@
+import { STYLE_TAG_OPTIONS } from '@shared/types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -7,27 +8,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CheckIcon, ChevronLeftIcon, PlusIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { Chip } from '@/components/ui/chip';
 import { useUpdateProfile } from '@/features/profile/hooks';
+import {
+  CANONICAL_COLOR_HEX,
+  FAVORITE_COLOR_OPTIONS,
+  LIGHT_COLORS,
+} from '@/lib/canonical-colors';
 import { colors as themeColors } from '@/lib/theme';
-
-const STYLE_OPTIONS = [
-  'minimal',
-  'smartcasual',
-  'oldmoney',
-  'streetwear',
-  'business',
-  'quietlux',
-] as const;
-
-// Swatches from design 1b; names feed the recommender as text.
-const COLOR_OPTIONS = [
-  { hex: '#e6dfd0', ro: 'bej', en: 'beige' },
-  { hex: '#1c1b19', ro: 'negru', en: 'black' },
-  { hex: '#9a968e', ro: 'gri', en: 'grey' },
-  { hex: '#26324a', ro: 'bleumarin', en: 'navy' },
-  { hex: '#6b4a30', ro: 'maro', en: 'brown' },
-  { hex: '#565633', ro: 'oliv', en: 'olive' },
-] as const;
 
 const BRAND_PRESETS = ['Massimo Dutti', 'COS', 'Zara', 'Uniqlo'];
 
@@ -42,7 +30,7 @@ function SectionLabel({ children, optional }: { children: string; optional?: boo
 }
 
 export default function StylePrefsScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const updateProfile = useUpdateProfile();
 
@@ -62,23 +50,6 @@ export default function StylePrefsScreen() {
 
   const finish = async () => {
     setError(false);
-    const lang = i18n.language === 'ro' ? 'ro' : 'en';
-    const parts: string[] = [];
-    if (styles.length) {
-      parts.push(
-        `${t('onboarding.stylePrefs')}: ${styles.map((s) => t(`onboarding.styles.${s}`)).join(', ')}.`,
-      );
-    }
-    if (colors.length) {
-      const names = COLOR_OPTIONS.filter((c) => colors.includes(c.hex)).map((c) => c[lang]);
-      parts.push(`${t('onboarding.prefColors')}: ${names.join(', ')}.`);
-    }
-    if (brands.length) {
-      parts.push(`${t('onboarding.favBrands')}: ${brands.join(', ')}.`);
-    }
-    if (freeText.trim()) {
-      parts.push(freeText.trim());
-    }
     const sizes: Record<string, string> = {};
     if (sizeTop.trim()) sizes.top = sizeTop.trim();
     if (sizeBottom.trim()) sizes.bottom = sizeBottom.trim();
@@ -86,7 +57,10 @@ export default function StylePrefsScreen() {
 
     try {
       await updateProfile.mutateAsync({
-        style_preferences: parts.length ? parts.join(' ') : null,
+        preferred_styles: styles,
+        favorite_colors: colors,
+        favorite_brands: brands,
+        style_preferences: freeText.trim() || null,
         no_go: noGo.trim() || null,
         sizes,
         onboarded_at: new Date().toISOString(),
@@ -117,58 +91,41 @@ export default function StylePrefsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <SectionLabel>{t('onboarding.stylePrefs')}</SectionLabel>
-        <View className="flex-row flex-wrap justify-between gap-y-2.5">
-          {STYLE_OPTIONS.map((style) => {
-            const selected = styles.includes(style);
-            return (
-              <Pressable
-                key={style}
-                accessibilityRole="button"
-                onPress={() => toggle(styles, setStyles, style)}
-                className="w-[31.5%]"
-              >
-                <View
-                  className={`h-[112px] items-center justify-center rounded-xl bg-imagebg ${
-                    selected ? 'border-2 border-dark' : ''
-                  }`}
-                >
-                  {selected ? (
-                    <View className="absolute right-1.5 top-1.5 h-[22px] w-[22px] items-center justify-center rounded-full bg-dark">
-                      <CheckIcon size={12} color="#fff" />
-                    </View>
-                  ) : null}
-                </View>
-                <Text
-                  className={`mt-1.5 text-center text-[12px] ${
-                    selected ? 'font-sansmed text-ink' : 'font-sans text-soft'
-                  }`}
-                >
-                  {t(`onboarding.styles.${style}`)}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View className="flex-row flex-wrap gap-2">
+          {STYLE_TAG_OPTIONS.map((slug) => (
+            <Chip
+              key={slug}
+              label={t(`styles.${slug}`)}
+              selected={styles.includes(slug)}
+              onPress={() => toggle(styles, setStyles, slug)}
+            />
+          ))}
         </View>
 
         <SectionLabel>{t('onboarding.prefColors')}</SectionLabel>
-        <View className="flex-row items-center gap-3">
-          {COLOR_OPTIONS.map((color) => {
-            const selected = colors.includes(color.hex);
+        <View className="flex-row flex-wrap gap-3">
+          {FAVORITE_COLOR_OPTIONS.map((color) => {
+            const selected = colors.includes(color);
+            const hex = CANONICAL_COLOR_HEX[color];
+            const light = LIGHT_COLORS.includes(color);
             return (
               <Pressable
-                key={color.hex}
+                key={color}
                 accessibilityRole="button"
-                onPress={() => toggle(colors, setColors, color.hex)}
+                accessibilityLabel={color}
+                onPress={() => toggle(colors, setColors, color)}
                 className={`items-center justify-center rounded-full ${
                   selected ? 'border-2 border-dark p-0.5' : ''
                 }`}
               >
                 <View
-                  className="h-[34px] w-[34px] items-center justify-center rounded-full"
-                  style={{ backgroundColor: color.hex }}
+                  className={`h-[34px] w-[34px] items-center justify-center rounded-full ${
+                    light ? 'border border-hairline' : ''
+                  }`}
+                  style={{ backgroundColor: hex }}
                 >
                   {selected ? (
-                    <CheckIcon size={13} color={color.hex === '#e6dfd0' ? themeColors.ink : '#fff'} />
+                    <CheckIcon size={13} color={light ? themeColors.ink : '#fff'} />
                   ) : null}
                 </View>
               </Pressable>
@@ -178,28 +135,15 @@ export default function StylePrefsScreen() {
 
         <SectionLabel optional>{t('onboarding.favBrands')}</SectionLabel>
         <View className="flex-row flex-wrap gap-2">
-          {[...BRAND_PRESETS, ...brands.filter((b) => !BRAND_PRESETS.includes(b))].map((brand) => {
-            const selected = brands.includes(brand);
-            return (
-              <Pressable
-                key={brand}
-                accessibilityRole="button"
-                onPress={() => toggle(brands, setBrands, brand)}
-                className={`rounded-[9px] px-4 py-2.5 ${
-                  selected ? 'bg-dark' : 'border border-strong bg-bright'
-                }`}
-              >
-                <Text
-                  className={
-                    selected ? 'font-sansmed text-[13px] text-bright' : 'font-sans text-[13px] text-ink'
-                  }
-                >
-                  {brand}
-                </Text>
-              </Pressable>
-            );
-          })}
-          <View className="flex-row items-center gap-1 rounded-[9px] border border-dashed border-[rgba(28,27,25,0.28)] px-3">
+          {[...BRAND_PRESETS, ...brands.filter((b) => !BRAND_PRESETS.includes(b))].map((brand) => (
+            <Chip
+              key={brand}
+              label={brand}
+              selected={brands.includes(brand)}
+              onPress={() => toggle(brands, setBrands, brand)}
+            />
+          ))}
+          <View className="flex-row items-center gap-1 rounded-full border border-dashed border-strong px-3">
             <PlusIcon size={14} color={themeColors.muted} strokeWidth={2} />
             <TextInput
               className="min-w-[70px] py-2 font-sans text-[13px] text-ink"

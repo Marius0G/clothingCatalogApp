@@ -13,7 +13,6 @@ import {
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
-import { useShareIntent } from 'expo-share-intent';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +21,7 @@ import { AuthProvider, useAuth } from '@/features/auth/provider';
 import { useProfile } from '@/features/profile/hooks';
 import { registerPushToken } from '@/lib/push';
 import { queryClient } from '@/lib/query';
+import { useShareIntent } from '@/lib/share-intent';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -86,13 +86,27 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!!session && !needsOnboarding}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="add-chooser"
+          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
         <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="wishlist-import" />
         <Stack.Screen name="share-import" />
         <Stack.Screen name="item/[id]" />
-        <Stack.Screen name="discover" />
-        <Stack.Screen name="outfits" />
+        <Stack.Screen name="outfit/[id]" />
         <Stack.Screen name="collections/index" />
         <Stack.Screen name="collections/[id]" />
+        <Stack.Screen name="preferences" />
+        <Stack.Screen name="support/index" />
+        <Stack.Screen name="support/help" />
+        <Stack.Screen name="support/feedback" />
+        <Stack.Screen name="settings/index" />
+        <Stack.Screen name="settings/account" />
+        <Stack.Screen name="settings/security" />
+        <Stack.Screen name="settings/notifications" />
+        <Stack.Screen name="settings/about" />
+        <Stack.Screen name="settings/terms" />
       </Stack.Protected>
     </Stack>
   );

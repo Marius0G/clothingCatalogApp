@@ -6,9 +6,20 @@ import {
   type ItemTags,
   type ItemUpdate,
 } from '@shared/types';
+import * as FileSystem from 'expo-file-system/legacy';
 import { z } from 'zod';
 
+// Feature→feature dependency, deliberate: local-ai is infrastructure the data
+// layer branches on, so the cloud/local split stays invisible to callers.
+import {
+  ensureLocalAiSynced,
+  isLocalAiAvailable,
+  localSuggestTags,
+} from '@/features/local-ai/api';
+import i18n from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+
+const tagLocale = () => (i18n.language === 'ro' ? 'ro' : 'en');
 
 const BUCKET = 'item-photos';
 
@@ -106,8 +117,50 @@ export async function getSignedImageUrl(path: string): Promise<string> {
   return data.signedUrl;
 }
 
+/**
+ * On-device variant of the tag-item edge function's item_id path: downloads
+ * the photo, tags it locally, applies the same fill-only-empty merge for the
+ * free-text fields. Null on any failure — caller falls through to the cloud.
+ */
+async function tagItemLocally(itemId: string): Promise<Item | null> {
+  const item = await getItem(itemId);
+  if (!item.image_path) return null;
+  const signedUrl = await getSignedImageUrl(item.image_path);
+  const localUri = `${FileSystem.cacheDirectory}tag-${itemId}.jpg`;
+  await FileSystem.downloadAsync(signedUrl, localUri);
+  try {
+    const tags = await localSuggestTags(localUri, tagLocale());
+    if (!tags) return null;
+    return await updateItem(itemId, {
+      title: item.title || tags.title,
+      brand: item.brand || tags.brand,
+      notes: item.notes || tags.description,
+      category: tags.category,
+      subcategory: tags.subcategory,
+      colors: tags.colors,
+      style_tags: tags.style_tags,
+      pattern: tags.pattern,
+      material: tags.material,
+      fit: tags.fit,
+      formality: tags.formality,
+      warmth: tags.warmth,
+      seasons: tags.seasons,
+      occasions: tags.occasions,
+      layer: tags.layer,
+      ai_tagged: true,
+    });
+  } finally {
+    FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+  }
+}
+
 /** Fire-and-forget vision auto-tagging; returns null if AI is unavailable. */
 export async function requestAutoTags(itemId: string): Promise<Item | null> {
+  await ensureLocalAiSynced();
+  if (isLocalAiAvailable()) {
+    const item = await tagItemLocally(itemId).catch(() => null);
+    if (item) return item;
+  }
   const { data, error } = await supabase.functions.invoke('tag-item', {
     body: { item_id: itemId },
   });
@@ -119,9 +172,17 @@ export async function requestAutoTags(itemId: string): Promise<Item | null> {
  * Vision tag suggestions for a photo that isn't saved yet (add-item screen).
  * Returns null when AI is unavailable — the caller degrades to post-save tagging.
  */
-export async function suggestTags(imageBase64: string): Promise<ItemTags | null> {
+export async function suggestTags(image: {
+  uri: string;
+  base64: string;
+}): Promise<ItemTags | null> {
+  await ensureLocalAiSynced();
+  if (isLocalAiAvailable()) {
+    const tags = await localSuggestTags(image.uri, tagLocale());
+    if (tags) return tags;
+  }
   const { data, error } = await supabase.functions.invoke('tag-item', {
-    body: { image_base64: imageBase64, mime: 'image/jpeg' },
+    body: { image_base64: image.base64, mime: 'image/jpeg' },
   });
   if (error) return null;
   const parsed = ItemTagsSchema.safeParse(data?.tags);
