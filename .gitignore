@@ -49,3 +49,4 @@ example
 google-services.json
 firebase-service-account*.json
 google-oauth-web-client.json
+.gradle-build.log
